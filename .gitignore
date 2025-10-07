@@ -1,0 +1,1 @@
+build/\n*.o\n*.exe\n*.dll\n*.pro.user\n.vscode/\n.idea/
