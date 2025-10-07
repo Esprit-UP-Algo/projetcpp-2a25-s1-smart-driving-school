@@ -212,7 +212,7 @@ QLabel#label_8 {
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -788,6 +788,21 @@ padding: 30px;</string>
       </property>
       <property name="wordWrap">
        <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QWidget" name="widget" native="true">
+      <property name="geometry">
+       <rect>
+        <x>950</x>
+        <y>480</y>
+        <width>120</width>
+        <height>80</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QWidget {
+    border-image: url(&quot;C:/Users/Fethia Braiki/Downloads/logo.jpeg&quot;) 0 0 0 0 stretch stretch;
+}</string>
       </property>
      </widget>
     </widget>
