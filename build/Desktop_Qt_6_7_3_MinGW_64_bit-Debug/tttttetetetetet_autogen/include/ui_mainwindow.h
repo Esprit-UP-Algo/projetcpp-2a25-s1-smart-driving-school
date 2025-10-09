@@ -62,10 +62,10 @@ public:
     QPushButton *pushButton_9;
     QTableWidget *tableWidget;
     QPushButton *pushButton_8;
-    QPushButton *pushButton_7;
     QWidget *tab_2;
     QLabel *label_stats_title;
     QLabel *label_stats_info;
+    QWidget *widget;
     QMenuBar *menubar;
     QStatusBar *statusbar;
 
@@ -256,7 +256,7 @@ public:
         label_8->setAlignment(Qt::AlignmentFlag::AlignCenter);
         tabWidget = new QTabWidget(centralwidget);
         tabWidget->setObjectName("tabWidget");
-        tabWidget->setGeometry(QRect(10, 30, 1160, 650));
+        tabWidget->setGeometry(QRect(20, 20, 1160, 650));
         tab = new QWidget();
         tab->setObjectName("tab");
         groupBox = new QGroupBox(tab);
@@ -372,7 +372,7 @@ public:
         pushButton_10->setGeometry(QRect(100, 110, 150, 35));
         groupBox_4 = new QGroupBox(tab);
         groupBox_4->setObjectName("groupBox_4");
-        groupBox_4->setGeometry(QRect(400, 20, 730, 430));
+        groupBox_4->setGeometry(QRect(390, 20, 730, 430));
         groupBox_4->setStyleSheet(QString::fromUtf8("QGroupBox {\n"
 "    background: white;\n"
 "    border: 2px solid #009688;\n"
@@ -419,23 +419,12 @@ public:
         QTableWidgetItem *__qtablewidgetitem3 = new QTableWidgetItem();
         tableWidget->setHorizontalHeaderItem(3, __qtablewidgetitem3);
         tableWidget->setObjectName("tableWidget");
-        tableWidget->setGeometry(QRect(20, 110, 571, 300));
+        tableWidget->setGeometry(QRect(130, 110, 411, 300));
         tableWidget->setAlternatingRowColors(true);
         tableWidget->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
         pushButton_8 = new QPushButton(tab);
         pushButton_8->setObjectName("pushButton_8");
         pushButton_8->setGeometry(QRect(500, 470, 150, 40));
-        pushButton_7 = new QPushButton(tab);
-        pushButton_7->setObjectName("pushButton_7");
-        pushButton_7->setGeometry(QRect(980, 530, 120, 40));
-        pushButton_7->setStyleSheet(QString::fromUtf8("QPushButton {\n"
-"    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
-"        stop:0 #607D8B, stop:1 #455A64);\n"
-"}\n"
-"QPushButton:hover {\n"
-"    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
-"        stop:0 #455A64, stop:1 #263238);\n"
-"}"));
         tabWidget->addTab(tab, QString());
         tab_2 = new QWidget();
         tab_2->setObjectName("tab_2");
@@ -455,6 +444,12 @@ public:
 "padding: 30px;"));
         label_stats_info->setAlignment(Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop);
         label_stats_info->setWordWrap(true);
+        widget = new QWidget(tab_2);
+        widget->setObjectName("widget");
+        widget->setGeometry(QRect(919, 449, 151, 111));
+        widget->setStyleSheet(QString::fromUtf8("QWidget {\n"
+"    border-image: url(\"C:/Users/Fethia Braiki/Downloads/logo.jpeg\") 0 0 0 0 stretch stretch;\n"
+"}"));
         tabWidget->addTab(tab_2, QString());
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
@@ -466,7 +461,6 @@ public:
         MainWindow->setStatusBar(statusbar);
 
         retranslateUi(MainWindow);
-        QObject::connect(pushButton_7, &QPushButton::clicked, MainWindow, qOverload<>(&QMainWindow::close));
 
         tabWidget->setCurrentIndex(0);
 
@@ -522,7 +516,6 @@ public:
         QTableWidgetItem *___qtablewidgetitem3 = tableWidget->horizontalHeaderItem(3);
         ___qtablewidgetitem3->setText(QCoreApplication::translate("MainWindow", "\303\211tat", nullptr));
         pushButton_8->setText(QCoreApplication::translate("MainWindow", "\360\237\223\204 Exporter PDF", nullptr));
-        pushButton_7->setText(QCoreApplication::translate("MainWindow", "\342\235\214 Quitter", nullptr));
         tabWidget->setTabText(tabWidget->indexOf(tab), QCoreApplication::translate("MainWindow", "\360\237\217\240 Accueil", nullptr));
         label_stats_title->setText(QCoreApplication::translate("MainWindow", "\360\237\223\212 Statistiques ", nullptr));
         label_stats_info->setText(QString());
