@@ -1,0 +1,7 @@
+﻿/build/
+/*.pro.user
+*.o
+*.obj
+*.exe
+*.dll
+*.log
