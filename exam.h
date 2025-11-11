@@ -27,6 +27,9 @@ public:
     // Modèles pour QTableView
     static QSqlQueryModel* afficherTous();                // SELECT *
     static QSqlQueryModel* afficherParCin(const QString &cin); // SELECT filtré
+    static bool modifierTexte(const QString &cin, const QDate &oldDate, const QString &col, const QString &val);
+    static bool modifierDate(const QString &cin, const QDate &oldDate,const QDate &newDate);
+    static QSqlQueryModel* afficherParDate(bool asc);
 
 private:
     QString type, date, lieu, resultat, cin;

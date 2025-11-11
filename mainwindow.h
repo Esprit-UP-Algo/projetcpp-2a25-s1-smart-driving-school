@@ -21,6 +21,8 @@ private slots:
     void on_addButton_clicked();
     void on_deleteButton_clicked();
     void on_btnSearch_clicked();
+    void on_modifyButton_clicked();
+    void on_triButton_clicked();
     void on_exportButton_2_clicked();
     void on_tabWidget_currentChanged(int index);
 

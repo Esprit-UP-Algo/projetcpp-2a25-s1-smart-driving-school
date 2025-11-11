@@ -5,6 +5,9 @@
 #include <QDebug>
 #include <QDate>
 #include <QDateTime>
+#include <utility>
+
+
 
 // Noms Oracle
 static const char* TABLE_NAME = "EXAMENS";
@@ -13,63 +16,147 @@ static const char* COL_DATE   = "DATE_EXAM";
 static const char* COL_LIEU   = "LIEU";
 static const char* COL_RES    = "RESULTAT";
 static const char* COL_CIN    = "CINC";
+static inline bool isExactly8Digits(const QString &s) {
+    const QString t = s.trimmed();
+    if (t.size() != 8) return false;
+    for (const QChar &c : t) if (!c.isDigit()) return false;
+    return true;
+}
+static inline bool isReussite(const QString &s) {
+    const QString t = s.trimmed().toLower();
+    return (t == "réussite" || t == "reussite");
+}
+static inline bool isEchec(const QString &s) {
+    const QString t = s.trimmed().toLower();
+    return (t == "échec" || t == "echec");
+}
 
-// INSERT
-bool Exam::ajouter() const
+
+
+// Récupère (date, résultat) de la DERNIÈRE tentative pour (CIN, TYPE).
+static bool fetchLastAttempt(const QString &cin, const QString &type,
+                             QDate *lastDate, QString *lastRes)
 {
-    QDate d = QDate::fromString(date, "dd/MM/yyyy");
-    if (!d.isValid()) {
-        qDebug() << "[Exam::ajouter] invalid date:" << date;
+    QSqlQuery q;
+    q.prepare(
+        "SELECT TRUNC(DATE_EXAM), RESULTAT "
+        "FROM EXAMENS "
+        "WHERE CINC=:cin AND UPPER(TYPE)=UPPER(:t) "
+        "  AND TRUNC(DATE_EXAM) = ("
+        "        SELECT MAX(TRUNC(DATE_EXAM)) "
+        "        FROM EXAMENS "
+        "        WHERE CINC=:cin AND UPPER(TYPE)=UPPER(:t)"
+        "  )"
+        );
+    q.bindValue(":cin", cin);
+    q.bindValue(":t",   type);
+
+    if (!q.exec()) {
+        qDebug() << "[fetchLastAttempt] SQL:" << q.lastError().text();
         return false;
     }
-    QDateTime dt(d.startOfDay());
-    {
-        QSqlQuery q;
-        q.prepare(QString("INSERT INTO %1 (%2, %3, %4, %5, %6) "
-                          "VALUES (?, ?, ?, ?, ?)")
-                      .arg(TABLE_NAME).arg(COL_TYPE).arg(COL_DATE)
-                      .arg(COL_LIEU).arg(COL_RES).arg(COL_CIN));
+    if (q.next()) {
+        *lastDate = q.value(0).toDate();
+        *lastRes  = q.value(1).toString();
+        return true;            // il y a une précédente tentative
+    }
+    return false;               // aucune précédente tentative
+}
+static bool existsAnyReussite(const QString &cin, const QString &type)
+{
+    QSqlQuery v;
+    v.prepare("SELECT COUNT(*) FROM EXAMENS "
+              "WHERE CINC=:cin AND UPPER(TYPE)=UPPER(:t) "
+              "AND UPPER(RESULTAT) IN ('REUSSITE','RÉUSSITE')");
+    v.bindValue(":cin", cin.trimmed());
+    v.bindValue(":t",   type.trimmed());
+    if (!v.exec() || !v.next()) { qDebug() << "[existsAnyReussite] SQL:" << v.lastError().text(); return true; }
+    return v.value(0).toInt() > 0;
+}
 
-        q.addBindValue(type);
-        q.addBindValue(dt);
-        q.addBindValue(lieu);
-        q.addBindValue(resultat);
-        q.addBindValue(cin);
+// A-t-il un Code réussi avant (ou le même jour) ?
+static bool hasCodeReussiBeforeOrSame(const QString &cin, const QDate &d)
+{
+    QSqlQuery qc;
+    qc.prepare("SELECT COUNT(*) FROM EXAMENS "
+               "WHERE CINC=:cin AND UPPER(TYPE)='CODE' "
+               "AND UPPER(RESULTAT) IN ('REUSSITE','RÉUSSITE') "
+               "AND TRUNC(DATE_EXAM) <= TRUNC(:d)");
+    qc.bindValue(":cin", cin.trimmed());
+    qc.bindValue(":d",  QDateTime(d.startOfDay()));
+    if (!qc.exec() || !qc.next()) { qDebug() << "[hasCodeReussiBeforeOrSame] SQL:" << qc.lastError().text(); return false; }
+    return qc.value(0).toInt() > 0;
+}
 
-        if (q.exec()) {
-            return true;
-        } else {
-            const QString err = q.lastError().text();
-            qDebug() << "[Exam::ajouter][A] error:" << err;
-            if (!err.contains("S1010", Qt::CaseInsensitive) &&
-                !err.contains("Erreur de séquence", Qt::CaseInsensitive)) {
-                return false;
-            }
+
+bool Exam::ajouter() const
+{
+    const QDate d = QDate::fromString(date, "dd/MM/yyyy");
+    if (!d.isValid()) { qDebug() << "[ajouter] date invalide:" << date; return false; }
+    if (!isExactly8Digits(cin)) { qDebug() << "[ajouter] CIN invalide (8 chiffres):" << cin; return false; }
+
+    const QString typeNorm = type.trimmed();
+    const QString resNorm  = resultat.trimmed();
+
+    if (existsAnyReussite(cin, typeNorm)) {
+        qDebug() << "[ajouter] refus: une Réussite existe déjà pour (CIN, TYPE).";
+        return false;
+    }
+
+    if (typeNorm.compare("conduite", Qt::CaseInsensitive) == 0 && isReussite(resNorm)) {
+        if (!hasCodeReussiBeforeOrSame(cin, d)) {
+            qDebug() << "[ajouter] refus: Conduite+Réussite sans Code Réussi avant.";
+            return false;
         }
     }
 
-    {
-        const QString iso = d.toString("yyyy-MM-dd");
-
-        QSqlQuery q2;
-        q2.prepare(QString("INSERT INTO %1 (%2, %3, %4, %5, %6) "
-                           "VALUES (?, TO_DATE(?, 'YYYY-MM-DD'), ?, ?, ?)")
-                       .arg(TABLE_NAME).arg(COL_TYPE).arg(COL_DATE)
-                       .arg(COL_LIEU).arg(COL_RES).arg(COL_CIN));
-
-        q2.addBindValue(type);
-        q2.addBindValue(iso);
-        q2.addBindValue(lieu);
-        q2.addBindValue(resultat);
-        q2.addBindValue(cin);
-
-        if (!q2.exec()) {
-            qDebug() << "[Exam::ajouter][B] error:" << q2.lastError().text();
+    QDate lastDate; QString lastRes;
+    if (fetchLastAttempt(cin, typeNorm, &lastDate, &lastRes)) {
+        if (!isEchec(lastRes)) {
+            qDebug() << "[ajouter] refus: dernière tentative n’est pas un Échec (" << lastRes << ")";
             return false;
         }
+        if (d < lastDate.addMonths(1)) {
+            qDebug() << "[ajouter] refus: moins d’un mois depuis la dernière tentative (" << lastDate << " -> " << lastDate.addMonths(1) << ")";
+            return false;
+        }
+    }
+    const QDateTime dt(d.startOfDay());
+    {
+        QSqlQuery q;
+        q.prepare(QString("INSERT INTO %1 (%2,%3,%4,%5,%6) VALUES (?,?,?,?,?)")
+                      .arg(TABLE_NAME).arg(COL_TYPE).arg(COL_DATE).arg(COL_LIEU).arg(COL_RES).arg(COL_CIN));
+        q.addBindValue(typeNorm);
+        q.addBindValue(dt);
+        q.addBindValue(lieu);
+        q.addBindValue(resNorm);
+        q.addBindValue(cin);
+        if (q.exec()) return true;
+
+        const QString err = q.lastError().text();
+        if (!err.contains("S1010", Qt::CaseInsensitive) &&
+            !err.contains("Erreur de séquence", Qt::CaseInsensitive)) {
+            qDebug() << "[ajouter][A]:" << err;
+            return false;
+        }
+        qDebug() << "[ajouter][A->B fallback]:" << err;
+    }
+
+    {
+        QSqlQuery q2;
+        q2.prepare(QString("INSERT INTO %1 (%2,%3,%4,%5,%6) "
+                           "VALUES (?, TO_DATE(?, 'YYYY-MM-DD'), ?, ?, ?)")
+                       .arg(TABLE_NAME).arg(COL_TYPE).arg(COL_DATE).arg(COL_LIEU).arg(COL_RES).arg(COL_CIN));
+        q2.addBindValue(typeNorm);
+        q2.addBindValue(d.toString("yyyy-MM-dd"));
+        q2.addBindValue(lieu);
+        q2.addBindValue(resNorm);
+        q2.addBindValue(cin);
+        if (!q2.exec()) { qDebug() << "[ajouter][B]:" << q2.lastError().text(); return false; }
         return true;
     }
 }
+
 
 
 bool Exam::supprimer(const QString &cin, const QString &date_ddMMyyyy)
@@ -125,7 +212,7 @@ QSqlQueryModel* Exam::afficherParCin(const QString &cin)
     query.bindValue(":cin", "%" + cin + "%");
     query.exec();
 
-    model->setQuery(query);
+    model->setQuery(std::move(query));
 
     if (model->lastError().isValid()) {
         qDebug() << "[Exam::afficherParCin] Erreur SQL:"
@@ -140,3 +227,57 @@ QSqlQueryModel* Exam::afficherParCin(const QString &cin)
 
     return model;
 }
+
+
+bool Exam::modifierTexte(const QString &cin, const QDate &oldDate,const QString &col, const QString &val)
+{
+    if (col != "TYPE" && col != "LIEU" && col != "RESULTAT" && col != "CINC") return false;
+    if (col == "CINC" && !isExactly8Digits(val)) {
+        qDebug() << "modifierTexte: CIN invalide (8 chiffres)";
+        return false;
+    }
+    QSqlQuery q;
+    q.prepare(QString("UPDATE EXAMENS SET %1 = :v WHERE CINC=:c AND DATE_EXAM=:d").arg(col));
+    q.bindValue(":v", val);
+    q.bindValue(":c", cin);
+    q.bindValue(":d", QDateTime(oldDate.startOfDay())); // Oracle DATE
+
+    if (!q.exec()) { qDebug() << "modifierTexte:" << q.lastError().text(); return false; }
+    return true;
+}
+
+bool Exam::modifierDate(const QString &cin, const QDate &oldDate, const QDate &newDate)
+{
+    if (!newDate.isValid()) return false;
+
+    QSqlQuery q;
+    q.prepare("UPDATE EXAMENS SET DATE_EXAM=:nd WHERE CINC=:c AND DATE_EXAM=:od");
+    q.bindValue(":nd", QDateTime(newDate.startOfDay()));
+    q.bindValue(":c",  cin);
+    q.bindValue(":od", QDateTime(oldDate.startOfDay()));
+
+    if (!q.exec()) { qDebug() << "modifierDate:" << q.lastError().text(); return false; }
+    return true;
+}
+QSqlQueryModel* Exam::afficherParDate(bool asc)
+{
+    auto *m = new QSqlQueryModel;
+    m->setQuery(QString(
+                    "SELECT TYPE, "
+                    "       TO_CHAR(DATE_EXAM,'DD/MM/YYYY') AS DATE_AFF, "
+                    "       LIEU, RESULTAT, CINC "
+                    "FROM EXAMENS "
+                    "ORDER BY EXAMENS.DATE_EXAM %1"
+                    ).arg(asc ? "ASC" : "DESC"));
+
+    if (m->lastError().isValid())
+        qDebug() << "[afficherParDate] SQL:" << m->lastError().text();
+
+    m->setHeaderData(0, Qt::Horizontal, "Type");
+    m->setHeaderData(1, Qt::Horizontal, "Date");
+    m->setHeaderData(2, Qt::Horizontal, "Lieu");
+    m->setHeaderData(3, Qt::Horizontal, "Résultat");
+    m->setHeaderData(4, Qt::Horizontal, "CIN");
+    return m;
+}
+
