@@ -1,5 +1,6 @@
 C:/Users/Fethia\ Braiki/Documents/tttttetetetetet/build/Desktop_Qt_6_7_3_MinGW_64_bit-Debug/tttttetetetetet_autogen/EWIEGA46WW/moc_mainwindow.cpp: C:/Users/Fethia\ Braiki/Documents/tttttetetetetet/mainwindow.h \
   C:/Users/Fethia\ Braiki/Documents/tttttetetetetet/build/Desktop_Qt_6_7_3_MinGW_64_bit-Debug/tttttetetetetet_autogen/moc_predefs.h \
+  C:/Qt/6.7.3/mingw_64/include/QtCore/QString \
   C:/Qt/6.7.3/mingw_64/include/QtCore/q20functional.h \
   C:/Qt/6.7.3/mingw_64/include/QtCore/q20memory.h \
   C:/Qt/6.7.3/mingw_64/include/QtCore/q20type_traits.h \
@@ -348,4 +349,5 @@ C:/Users/Fethia\ Braiki/Documents/tttttetetetetet/build/Desktop_Qt_6_7_3_MinGW_6
   C:/Qt/Tools/mingw1120_64/x86_64-w64-mingw32/include/sys/types.h \
   C:/Qt/Tools/mingw1120_64/x86_64-w64-mingw32/include/time.h \
   C:/Qt/Tools/mingw1120_64/x86_64-w64-mingw32/include/vadefs.h \
-  C:/Qt/Tools/mingw1120_64/x86_64-w64-mingw32/include/wchar.h
+  C:/Qt/Tools/mingw1120_64/x86_64-w64-mingw32/include/wchar.h \
+  C:/Users/Fethia\ Braiki/Documents/tttttetetetetet/vehicule.h
