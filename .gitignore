@@ -1,7 +1,14 @@
-﻿/build/
-/*.pro.user
+﻿# Qt / build
+build*/
+debug/
+release/
+.qtc_clangd/
+moc_*
+ui_*
+Makefile*
 *.o
 *.obj
 *.exe
-*.dll
-*.log
+*.pdb
+*.ilk
+*.pro.user
