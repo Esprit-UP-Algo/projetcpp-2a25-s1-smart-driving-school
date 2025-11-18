@@ -8,7 +8,6 @@
 #include <QSqlQueryModel>
 #include <QDebug>
 
-// on travaille : classe simple, C++ basique
 class Exam
 {
 public:
@@ -24,9 +23,8 @@ public:
     bool ajouter() const;                                 // INSERT
     static bool supprimer(const QString &cin, const QString &date_ddMMyyyy); // DELETE par (CINC, DATE_EXAM)
 
-    // Modèles pour QTableView
-    static QSqlQueryModel* afficherTous();                // SELECT *
-    static QSqlQueryModel* afficherParCin(const QString &cin); // SELECT filtré
+    static QSqlQueryModel* afficherTous();
+    static QSqlQueryModel* afficherParCin(const QString &cin);
     static bool modifierTexte(const QString &cin, const QDate &oldDate, const QString &col, const QString &val);
     static bool modifierDate(const QString &cin, const QDate &oldDate,const QDate &newDate);
     static QSqlQueryModel* afficherParDate(bool asc);

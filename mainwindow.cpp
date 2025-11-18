@@ -6,6 +6,10 @@
 #include <QHeaderView>
 #include <QAbstractItemModel>
 
+#include <QFileDialog>
+#include <QPdfWriter>
+#include <QPainter>
+#include <QPageSize>
 static bool isExactly8Digits(const QString &s) {
     const QString t = s.trimmed();
     if (t.size() != 8) return false;
@@ -41,7 +45,15 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    const auto go = [&](QWidget* page){ ui->stack->setCurrentWidget(page); };
+    connect(ui->btnExamens,  &QPushButton::clicked, this, [=]{ go(ui->pageExamens);  });
+    connect(ui->btnCandidat, &QPushButton::clicked, this, [=]{ go(ui->pageCandidats); });
+    connect(ui->btnMoniteur, &QPushButton::clicked, this, [=]{ go(ui->pageMoniteur);  });
+    connect(ui->btnVehicule, &QPushButton::clicked, this, [=]{ go(ui->pageVehicules); });
+    connect(ui->btnFinance,  &QPushButton::clicked, this, [=]{ go(ui->pageFinance);  });
 
+    // page par défaut :
+    ui->stack->setCurrentWidget(ui->pageExamens);
     auto setMaskForField = [this](const QString &field){
         ui->lineEdit_7->setInputMask("");
         ui->lineEdit_7->setMaxLength(64);
@@ -129,7 +141,10 @@ void MainWindow::on_addButton_clicked()
     const QString date     = ui->dateEdit->date().toString("dd/MM/yyyy");
     const QString resultat = ui->comboBox_6->currentText();
     const QString cin      = ui->lineEdit_5->text();
-
+    if (role_ != Role::Admin) {
+        QMessageBox::warning(this, "Droits", "Action réservée à l'admin.");
+        return;
+    }
     if (lieu.isEmpty() || cin.isEmpty()) {
         QMessageBox::warning(this, "Erreur", "Veuillez remplir tous les champs");
         return;
@@ -162,7 +177,10 @@ void MainWindow::on_deleteButton_clicked()
     const QString date = m->index(row, 1).data().toString();
 
     detachModel();
-
+    if (role_ != Role::Admin) {
+        QMessageBox::warning(this, "Droits", "Action réservée à l'admin.");
+        return;
+    }
     if (Exam::supprimer(cin, date)) {
         loadTableData();
         QMessageBox::information(this, "Succès", "Examen supprimé");
@@ -186,11 +204,7 @@ void MainWindow::on_btnSearch_clicked()
     ui->tableViewExams->setModel(modelExams);
 }
 
-void MainWindow::on_exportButton_2_clicked()
-{
-    loadTableData();
-    QMessageBox::information(this, "Info", "Données rechargées");
-}
+
 
 void MainWindow::on_tabWidget_currentChanged(int index)
 {
@@ -201,6 +215,10 @@ void MainWindow::on_modifyButton_clicked()
 {
     auto *m   = qobject_cast<QSqlQueryModel*>(ui->tableViewExams->model());
     auto *sel = ui->tableViewExams->selectionModel();
+    if (role_ != Role::Admin) {
+        QMessageBox::warning(this, "Droits", "Action réservée à l'admin.");
+        return;
+    }
     if (!m || !sel || !sel->hasSelection()) {
         QMessageBox::warning(this, "Erreur", "Sélectionnez une ligne du tableau.");
         return;
@@ -216,7 +234,7 @@ void MainWindow::on_modifyButton_clicked()
     if (nv.isEmpty()) { QMessageBox::warning(this, "Erreur", "Entrez une nouvelle valeur."); return; }
 
     bool ok = false;
-    detachModel(); // libère l'ancien modèle avant UPDATE
+    detachModel();
 
     if (field == "Date") {
         const QDate nd = QDate::fromString(nv, "dd/MM/yyyy");
@@ -258,4 +276,104 @@ void MainWindow::on_triButton_clicked() {
     ui->tableViewExams->setModel(modelExams);
 }
 
+
+void MainWindow::on_exportButton_clicked()
+{
+    const QString filePath = QFileDialog::getSaveFileName(
+        this, tr("Exporter en PDF"),
+        QDir::homePath() + "/Examens_" +
+            QDateTime::currentDateTime().toString("yyyyMMdd_hhmmss") + ".pdf",
+        "PDF (*.pdf)"
+        );
+    if (role_ != Role::Admin) {
+        QMessageBox::warning(this, "Droits", "Action réservée à l'admin.");
+        return;
+    }
+    if (filePath.isEmpty()) return;
+
+    QPdfWriter pdf(filePath);
+    pdf.setPageSize(QPageSize(QPageSize::A4));
+    pdf.setResolution(300);
+
+    QPainter p(&pdf);
+    if (!p.isActive()) {
+        QMessageBox::critical(this, "Erreur", "Impossible de créer le PDF.");
+        return;
+    }
+
+    const int margin = 80;
+    const int lineH  = 28;
+    int y = margin + 40;
+
+    auto drawHeader = [&](){
+        p.setFont(QFont("Arial", 16, QFont::Bold));
+        p.drawText(margin, margin, tr("Liste des examens"));
+        p.setFont(QFont("Arial", 10, QFont::Bold));
+        p.drawText(margin +   0, y, "Type");
+        p.drawText(margin + 180, y, "Date");
+        p.drawText(margin + 320, y, "Lieu");
+        p.drawText(margin + 560, y, "Résultat");
+        p.drawText(margin + 760, y, "CIN");
+        y += lineH;
+        p.setFont(QFont("Arial", 10));
+    };
+    auto newPage = [&](){
+        pdf.newPage();
+        y = margin + 40;
+        drawHeader();
+    };
+
+    drawHeader();
+
+    QSqlQuery q;
+    if (!q.exec(
+            "SELECT TYPE, "
+            "       TO_CHAR(DATE_EXAM,'DD/MM/YYYY') AS DATE_EXAM, "
+            "       LIEU, RESULTAT, CINC "
+            "FROM EXAMENS "
+            "ORDER BY DATE_EXAM ASC"))
+    {
+        QMessageBox::critical(this, "Erreur SQL",
+                              "Échec de lecture des données :\n" + q.lastError().text());
+        return;
+    }
+
+    while (q.next()) {
+        if (y > pdf.height() - margin) newPage();
+
+        const QString type = q.value(0).toString();
+        const QString date = q.value(1).toString();
+        const QString lieu = q.value(2).toString();
+        const QString res  = q.value(3).toString();
+        const QString cin  = q.value(4).toString();
+
+        p.drawText(margin +   0, y, type);
+        p.drawText(margin + 180, y, date);
+        p.drawText(margin + 320, y, lieu);
+        p.drawText(margin + 560, y, res);
+        p.drawText(margin + 760, y, cin);
+        y += lineH;
+    }
+
+    p.end();
+    QMessageBox::information(this, "Succès", "PDF exporté avec succès !");
+}
+
+void MainWindow::setRole(Role r) {
+    role_ = r;
+    applyRole();
+}
+
+
+void MainWindow::applyRole() {
+    const bool isAdmin    = (role_ == Role::Admin);
+    const bool isMoniteur = (role_ == Role::Moniteur);
+
+    ui->btnCandidat->setVisible(isAdmin);
+    ui->btnFinance->setVisible(isAdmin);
+    ui->btnMoniteur->setVisible(isAdmin || isMoniteur);
+    ui->btnVehicule->setVisible(isAdmin || isMoniteur);
+
+
+}
 

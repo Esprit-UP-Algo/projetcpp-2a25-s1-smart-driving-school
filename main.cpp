@@ -5,15 +5,16 @@
 #include <QMessageBox>
 #include <QDebug>
 #include <QtSql/QSqlDatabase>
+#include "role.h"
+#include "logindialog.h"
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
+    // 1) Connexion DB
     Connexion c;
-    const bool ok = c.ouvrirConnexion();
-
-    if (!ok) {
+    if (!c.ouvrirConnexion()) {
         QMessageBox::critical(
             nullptr,
             QObject::tr("Échec"),
@@ -23,15 +24,34 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    MainWindow w;
-    w.show();
 
-    QMessageBox::information(
-        &w,
-        QObject::tr("Base de données"),
-        QObject::tr("FÉLICITATIONS, vous êtes connecté à la base !\n"
-                    "Cliquez OK pour continuer.")
-        );
+    LoginDialog dlg;
+    if (dlg.exec() != QDialog::Accepted) {
+        return 0;
+    }
+    Role role = dlg.selectedRole();
+
+    MainWindow w;
+    w.setRole(role);
+    w.show();
 
     return a.exec();
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*    QMessageBox::information(
+        nullptr,
+        QObject::tr("Base de données"),
+        QObject::tr("Connexion établie avec succès.")
+        );*/

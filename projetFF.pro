@@ -10,16 +10,20 @@ CONFIG += c++17
 
 SOURCES += \
     exam.cpp \
+    logindialog.cpp \
     main.cpp \
     mainwindow.cpp \
     connexion.cpp
 
 HEADERS += \
     exam.h \
+    logindialog.h \
     mainwindow.h \
-    connexion.h
+    connexion.h \
+    role.h
 
 FORMS += \
+    logindialog.ui \
     mainwindow.ui \
     connexion.ui
 
