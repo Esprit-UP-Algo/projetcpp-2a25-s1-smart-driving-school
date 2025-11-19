@@ -17,18 +17,42 @@
 #include <QSqlQueryModel>
 #include <QSqlRecord>
 #include <QVBoxLayout>
-
+#include <QPageLayout>
+#include <QPageSize>
+#include <QPainter>
+#include <QMessageBox>
+#include <QPrinter>
+#include <QFileDialog>
+#include <QPainter>
 #include <QtCharts/QChartView>
 #include <QtCharts/QBarSet>
 #include <QtCharts/QBarSeries>
 #include <QtCharts/QChart>
 #include <QtCharts/QBarCategoryAxis>
 #include <QtCharts/QValueAxis>
+#include <QDebug>
+#include <QtCharts/QPieSeries>
+#include "qr/qrcodegen.hpp"
+using namespace qrcodegen;
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    chatWindow = new chat(this);
+    chatWindow->setMainWindow(this);
+
+    // === Create chart view for the Dashboard ===
+    chartViewBalance = new QChartView(ui->groupBox_search_7);
+    chartViewBalance->setRenderHint(QPainter::Antialiasing);
+    chartViewBalance->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    chartViewBalance->setGeometry(ui->groupBox_search_7->rect());
+
+    // First load
+    updateDashboard();
+
     loadTableData();
     loadStatistics();
     if (ui->tableViewTRANS->horizontalHeader())
@@ -50,6 +74,65 @@ void MainWindow::detachModel()
     }
 }
 
+
+void MainWindow::updateDashboard()
+{
+    double totalIncome  = 0.0;
+    double totalExpense = 0.0;
+
+    QSqlQuery query;
+
+    // ---------- Total revenues ----------
+    if (!query.exec("SELECT COALESCE(SUM(AMOUNT), 0) FROM TRANSACTION WHERE TYPE = 'incom'")) {
+        qDebug() << "Error income:" << query.lastError().text();
+        return;
+    }
+    if (query.next()) {
+        totalIncome = query.value(0).toDouble();
+    }
+
+    // ---------- Total expenses ----------
+    if (!query.exec("SELECT COALESCE(SUM(AMOUNT), 0) FROM TRANSACTION WHERE TYPE = 'expense'")) {
+        qDebug() << "Error expense:" << query.lastError().text();
+        return;
+    }
+    if (query.next()) {
+        totalExpense = query.value(0).toDouble();
+    }
+
+    double balance = totalIncome - totalExpense;
+
+    // ---------- Update LCDs ----------
+    ui->lcdIncome->display(totalIncome);
+    ui->lcdExpense->display(totalExpense);
+    ui->lcdBalance->display(balance);
+
+    // Optional: change color of balance depending on sign
+    if (balance >= 0)
+        ui->lcdBalance->setStyleSheet("color: green;");
+    else
+        ui->lcdBalance->setStyleSheet("color: red;");
+
+    // ---------- Mini pie chart ----------
+    if (chartViewBalance) {
+        // Remove old chart to avoid leaks
+        if (chartViewBalance->chart())
+            delete chartViewBalance->chart();
+
+        QPieSeries *series = new QPieSeries();
+        series->append("Revenus",  totalIncome);
+        series->append("Dépenses", totalExpense);
+
+        QChart *chart = new QChart();
+        chart->addSeries(series);
+        chart->setTitle("Répartition revenus / dépenses");
+        chart->legend()->setAlignment(Qt::AlignBottom);
+
+        chartViewBalance->setChart(chart);
+    }
+}
+
+
 void MainWindow::loadTableData()
 {
     detachModel();
@@ -68,12 +151,44 @@ void MainWindow::onTableCurrentChanged(const QModelIndex &current, const QModelI
     if (!current.isValid()) return;
     int row = current.row();
     auto *m = ui->tableViewTRANS->model();
-    // columns in your SELECT: 0 ID, 1 Type, 2 Date(dd/MM/yyyy), 3 Amount, 4 Category, 5 Methode
     ui->TYPE->setCurrentText(m->index(row, 1).data().toString());
     ui->dateEdit->setDate(QDate::fromString(m->index(row, 2).data().toString(), "dd/MM/yyyy"));
     ui->MONTANT->setText(m->index(row, 3).data().toString());
     ui->CATEGORY->setCurrentText(m->index(row, 4).data().toString());
     ui->METHOD->setCurrentText(m->index(row, 5).data().toString());
+}
+
+void MainWindow::on_exportButton_clicked()
+{
+    QTableView* view = ui->tableViewTRANS;
+    if (!view) return;
+
+    QString filePath = QFileDialog::getSaveFileName(
+        this, "Save PDF", "", "PDF Files (*.pdf)");
+    if (filePath.isEmpty()) return;
+    if (!filePath.endsWith(".pdf", Qt::CaseInsensitive)) filePath += ".pdf";
+
+    QPrinter printer(QPrinter::HighResolution);
+    printer.setOutputFormat(QPrinter::PdfFormat);
+    printer.setOutputFileName(filePath);
+    printer.setPageSize(QPageSize(QPageSize::A4));
+    printer.setPageMargins(QMarginsF(12, 12, 12, 12), QPageLayout::Millimeter);
+
+    QPainter painter(&printer);
+
+    const QRectF pageRect = printer.pageLayout().paintRectPixels(printer.resolution());
+    const QSize  contentSize = ui->tableViewTRANS->viewport()->size();   // or your view
+    const qreal  sx = pageRect.width()  / qreal(contentSize.width());
+    const qreal  sy = pageRect.height() / qreal(contentSize.height());
+
+    painter.save();
+    painter.translate(pageRect.topLeft());
+    painter.scale(std::min(sx, sy), std::min(sx, sy));
+    ui->tableViewTRANS->render(&painter);   // or your view
+    painter.restore();
+
+    painter.end();
+    QMessageBox::information(this, "Export", "Table exported to PDF.");
 }
 
 void MainWindow::on_UpdateButton_clicked()
@@ -110,6 +225,7 @@ void MainWindow::on_UpdateButton_clicked()
     if (t.mettreAJour(id)) {
         loadTableData();
         loadStatistics();
+        updateDashboard();
         QMessageBox::information(this, "Succès", "Transaction mise à jour");
     } else {
         QMessageBox::critical(this, "Erreur", "Échec de mise à jour");
@@ -212,7 +328,7 @@ void MainWindow::on_addButton_clicked()
     detachModel();
     if (t.ajouter()) {
         loadTableData();
-        loadStatistics();
+        updateDashboard();
         clearForm();
         QMessageBox::information(this, "Succès", "Transaction ajoutée");
     } else {
@@ -235,7 +351,7 @@ void MainWindow::on_deleteButton_clicked()
     detachModel();
     if (Transaction::supprimer(id_t)) {
         loadTableData();
-        loadStatistics();
+        updateDashboard();
         QMessageBox::information(this, "Succès", "Transaction supprimée");
     } else {
         QMessageBox::critical(this, "Erreur", "Échec de suppression");
@@ -298,4 +414,92 @@ void MainWindow::on_TRIE_activated(int index)
     detachModel();
     modelTransactions = Transaction::tri(sortType);
     ui->tableViewTRANS->setModel(modelTransactions);
+}
+
+QString MainWindow::buildDashboardText() const
+{
+    // 🔁 CHANGE THESE NAMES to match your QLCDNumber widgets
+    double revenus  = ui->lcdIncome->value();      // e.g. ui->lcdTotalRevenus
+    double depenses = ui->lcdExpense->value();     // e.g. ui->lcdTotalDepenses
+    double balance  = ui->lcdBalance->value();      // e.g. ui->lcdBalance
+
+    QString revenusStr  = QString::number(revenus,  'f', 2);
+    QString depensesStr = QString::number(depenses, 'f', 2);
+    QString balanceStr  = QString::number(balance,  'f', 2);
+
+    QString date = QDate::currentDate().toString("dd.MM.yyyy");
+
+    QString text;
+    text += "Gestion Transaction : BILAN \n\n";
+    text += "Revenus totaux : " + revenusStr +"  " + "DT"+"\n";
+    text += "Depenses totales : " + depensesStr +"  " + "DT"+"\n";
+    text += "Balance : "       + balanceStr +"  " + "DT"+"\n\n";
+    text += "Date : " + date + "\n";
+
+    return text;
+}
+
+QImage MainWindow::generateQrImage(const QString &text, int pixelsPerModule)
+{
+    const std::string utf8 = text.toUtf8().constData();
+    QrCode qr = QrCode::encodeText(utf8.c_str(), QrCode::Ecc::QUARTILE);
+
+    int size = qr.getSize();
+    int imgSize = size * pixelsPerModule;
+
+    QImage image(imgSize, imgSize, QImage::Format_RGB32);
+    image.fill(Qt::white);
+
+    QPainter painter(&image);
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(Qt::black);
+
+    for (int y = 0; y < size; ++y) {
+        for (int x = 0; x < size; ++x) {
+            if (qr.getModule(x, y)) {
+                QRect r(x * pixelsPerModule,
+                        y * pixelsPerModule,
+                        pixelsPerModule,
+                        pixelsPerModule);
+                painter.drawRect(r);
+            }
+        }
+    }
+
+    painter.end();
+    return image;
+}
+
+void MainWindow::on_btnGenerateQr_clicked()
+{
+    QString data = buildDashboardText();
+    QImage qrImg = generateQrImage(data, 8);   // 8 px per module = good quality
+
+    QPixmap pix = QPixmap::fromImage(qrImg)
+                      .scaled(ui->labelQrDashboard->size(),
+                              Qt::KeepAspectRatio,
+                              Qt::SmoothTransformation);
+
+    ui->labelQrDashboard->setPixmap(pix);
+}
+
+void MainWindow::on_chatButton_clicked()
+{
+    chatWindow->show();
+    chatWindow->raise();
+    chatWindow->activateWindow();
+}
+double MainWindow::getTotalIncome() const
+{
+    return ui->lcdIncome->value();
+}
+
+double MainWindow::getTotalExpenses() const
+{
+    return ui->lcdExpense->value();
+}
+
+double MainWindow::getTotalBalance() const
+{
+    return ui->lcdBalance->value();
 }
