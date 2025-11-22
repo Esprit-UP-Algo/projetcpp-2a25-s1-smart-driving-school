@@ -1,13 +1,57 @@
 # ninja log v6
-56	1050	7845103860260342	tttttetetetetet_autogen/timestamp	72aa37f7f470cf9f
-56	1050	7845103860260342	tttttetetetetet_autogen/mocs_compilation.cpp	72aa37f7f470cf9f
-56	1050	7845103860260342	C:/Users/Fethia Braiki/Documents/tttttetetetetet/build/Desktop_Qt_6_7_3_MinGW_64_bit-Debug/tttttetetetetet_autogen/timestamp	72aa37f7f470cf9f
-1197	4498	7813892810559725	CMakeFiles/tttttetetetetet.dir/tttttetetetetet_autogen/mocs_compilation.cpp.obj	eac04318c198f51c
-520	4823	7817413569176574	CMakeFiles/tttttetetetetet.dir/mainwindow.cpp.obj	497ab42513015e80
-56	1050	7845103860260342	C:/Users/Fethia Braiki/Documents/tttttetetetetet/build/Desktop_Qt_6_7_3_MinGW_64_bit-Debug/tttttetetetetet_autogen/mocs_compilation.cpp	72aa37f7f470cf9f
-1206	4506	7813892810656448	CMakeFiles/tttttetetetetet.dir/main.cpp.obj	62e3ee263980b7c3
-4823	5628	7817413612212105	tttttetetetetet.exe	751c34e7907de4a6
-56	359	7845104679725771	tttttetetetetet_autogen/timestamp	72aa37f7f470cf9f
-56	359	7845104679725771	tttttetetetetet_autogen/mocs_compilation.cpp	72aa37f7f470cf9f
-56	359	7845104679725771	C:/Users/Fethia Braiki/Documents/tttttetetetetet/build/Desktop_Qt_6_7_3_MinGW_64_bit-Debug/tttttetetetetet_autogen/timestamp	72aa37f7f470cf9f
-56	359	7845104679725771	C:/Users/Fethia Braiki/Documents/tttttetetetetet/build/Desktop_Qt_6_7_3_MinGW_64_bit-Debug/tttttetetetetet_autogen/mocs_compilation.cpp	72aa37f7f470cf9f
+78	440	7852505482348813	tttttetetetetet_autogen/timestamp	72aa37f7f470cf9f
+78	440	7852505482348813	tttttetetetetet_autogen/mocs_compilation.cpp	72aa37f7f470cf9f
+78	440	7852505482348813	C:/Users/Fethia Braiki/Documents/tttttetetetetet/build/Desktop_Qt_6_7_3_MinGW_64_bit-Debug/tttttetetetetet_autogen/timestamp	72aa37f7f470cf9f
+1133	5191	7852467762280760	CMakeFiles/tttttetetetetet.dir/tttttetetetetet_autogen/mocs_compilation.cpp.obj	17e0bcaf347102f0
+441	7674	7852505485978197	CMakeFiles/tttttetetetetet.dir/mainwindow.cpp.obj	28343027e04c1b68
+78	440	7852505482348813	C:/Users/Fethia Braiki/Documents/tttttetetetetet/build/Desktop_Qt_6_7_3_MinGW_64_bit-Debug/tttttetetetetet_autogen/mocs_compilation.cpp	72aa37f7f470cf9f
+1141	5190	7852467762441146	CMakeFiles/tttttetetetetet.dir/main.cpp.obj	bbd3c240cd019fa1
+7675	8350	7852505558323366	tttttetetetetet.exe	cae5a679a8556619
+1250	5057	7852442965429968	CMakeFiles/tttttetetetetet.dir/connection.cpp.obj	5df65328edf6921e
+392	3263	7852459511571215	CMakeFiles/tttttetetetetet.dir/vehicule.cpp.obj	9fb476ce8fc4cdae
+37	83	7852442951168828	CMakeFiles/clean.additional	baedbe210acaa455
+84	100	7852442951634310	clean	577b940aee94fbd7
+45	126	7852512437427906	CMakeFiles/clean.additional	baedbe210acaa455
+42	97	7852512440530675	CMakeFiles/clean.additional	baedbe210acaa455
+51	102	7852512478280762	CMakeFiles/clean.additional	baedbe210acaa455
+103	124	7852512478815205	clean	577b940aee94fbd7
+52	1605	7852512494733436	tttttetetetetet_autogen/timestamp	72aa37f7f470cf9f
+52	1605	7852512494733436	tttttetetetetet_autogen/mocs_compilation.cpp	72aa37f7f470cf9f
+52	1605	7852512494733436	C:/Users/Fethia Braiki/Documents/tttttetetetetet/build/Desktop_Qt_6_7_3_MinGW_64_bit-Debug/tttttetetetetet_autogen/timestamp	72aa37f7f470cf9f
+52	1605	7852512494733436	C:/Users/Fethia Braiki/Documents/tttttetetetetet/build/Desktop_Qt_6_7_3_MinGW_64_bit-Debug/tttttetetetetet_autogen/mocs_compilation.cpp	72aa37f7f470cf9f
+1638	5667	7852512496816722	CMakeFiles/tttttetetetetet.dir/connection.cpp.obj	b3a7250def6bf3b9
+1652	5819	7852512496959485	CMakeFiles/tttttetetetetet.dir/vehicule.cpp.obj	5e8d958e178dc059
+1608	6803	7852512496516750	CMakeFiles/tttttetetetetet.dir/tttttetetetetet_autogen/mocs_compilation.cpp.obj	211789fd8c8ccfc
+1617	6933	7852512496607514	CMakeFiles/tttttetetetetet.dir/main.cpp.obj	7159570008eb630c
+1626	8697	7852512496696554	CMakeFiles/tttttetetetetet.dir/mainwindow.cpp.obj	31488274a6ffefc
+8697	9358	7852512567395263	tttttetetetetet.exe	d0613d5c9175ce49
+59	112	7852512576113794	CMakeFiles/clean.additional	baedbe210acaa455
+113	135	7852512576633446	clean	577b940aee94fbd7
+46	1394	7852512590448424	tttttetetetetet_autogen/timestamp	72aa37f7f470cf9f
+46	1394	7852512590448424	tttttetetetetet_autogen/mocs_compilation.cpp	72aa37f7f470cf9f
+46	1394	7852512590448424	C:/Users/Fethia Braiki/Documents/tttttetetetetet/build/Desktop_Qt_6_7_3_MinGW_64_bit-Debug/tttttetetetetet_autogen/timestamp	72aa37f7f470cf9f
+46	1394	7852512590448424	C:/Users/Fethia Braiki/Documents/tttttetetetetet/build/Desktop_Qt_6_7_3_MinGW_64_bit-Debug/tttttetetetetet_autogen/mocs_compilation.cpp	72aa37f7f470cf9f
+1425	5065	7852512592457098	CMakeFiles/tttttetetetetet.dir/connection.cpp.obj	b3a7250def6bf3b9
+1435	5382	7852512592575278	CMakeFiles/tttttetetetetet.dir/vehicule.cpp.obj	5e8d958e178dc059
+1405	6378	7852512592238447	CMakeFiles/tttttetetetetet.dir/main.cpp.obj	7159570008eb630c
+1396	6384	7852512592179310	CMakeFiles/tttttetetetetet.dir/tttttetetetetet_autogen/mocs_compilation.cpp.obj	211789fd8c8ccfc
+1415	8300	7852512592338252	CMakeFiles/tttttetetetetet.dir/mainwindow.cpp.obj	31488274a6ffefc
+8301	8922	7852512661220562	tttttetetetetet.exe	d0613d5c9175ce49
+28	436	7852513896978224	tttttetetetetet_autogen/timestamp	72aa37f7f470cf9f
+28	436	7852513896978224	tttttetetetetet_autogen/mocs_compilation.cpp	72aa37f7f470cf9f
+28	436	7852513896978224	C:/Users/Fethia Braiki/Documents/tttttetetetetet/build/Desktop_Qt_6_7_3_MinGW_64_bit-Debug/tttttetetetetet_autogen/timestamp	72aa37f7f470cf9f
+28	436	7852513896978224	C:/Users/Fethia Braiki/Documents/tttttetetetetet/build/Desktop_Qt_6_7_3_MinGW_64_bit-Debug/tttttetetetetet_autogen/mocs_compilation.cpp	72aa37f7f470cf9f
+438	7096	7852513901074829	CMakeFiles/tttttetetetetet.dir/mainwindow.cpp.obj	31488274a6ffefc
+7097	7753	7852513967656174	tttttetetetetet.exe	d0613d5c9175ce49
+94	508	7852520022330974	tttttetetetetet_autogen/timestamp	72aa37f7f470cf9f
+94	508	7852520022330974	tttttetetetetet_autogen/mocs_compilation.cpp	72aa37f7f470cf9f
+94	508	7852520022330974	C:/Users/Fethia Braiki/Documents/tttttetetetetet/build/Desktop_Qt_6_7_3_MinGW_64_bit-Debug/tttttetetetetet_autogen/timestamp	72aa37f7f470cf9f
+94	508	7852520022330974	C:/Users/Fethia Braiki/Documents/tttttetetetetet/build/Desktop_Qt_6_7_3_MinGW_64_bit-Debug/tttttetetetetet_autogen/mocs_compilation.cpp	72aa37f7f470cf9f
+510	7034	7852520026480047	CMakeFiles/tttttetetetetet.dir/mainwindow.cpp.obj	31488274a6ffefc
+7035	7683	7852520091729401	tttttetetetetet.exe	d0613d5c9175ce49
+146	611	7855433643392763	tttttetetetetet_autogen/timestamp	72aa37f7f470cf9f
+146	611	7855433643392763	tttttetetetetet_autogen/mocs_compilation.cpp	72aa37f7f470cf9f
+146	611	7855433643392763	C:/Users/Fethia Braiki/Documents/tttttetetetetet/build/Desktop_Qt_6_7_3_MinGW_64_bit-Debug/tttttetetetetet_autogen/timestamp	72aa37f7f470cf9f
+146	611	7855433643392763	C:/Users/Fethia Braiki/Documents/tttttetetetetet/build/Desktop_Qt_6_7_3_MinGW_64_bit-Debug/tttttetetetetet_autogen/mocs_compilation.cpp	72aa37f7f470cf9f
+614	8732	7855433648063978	CMakeFiles/tttttetetetetet.dir/mainwindow.cpp.obj	31488274a6ffefc
+8732	10120	7855433729248069	tttttetetetetet.exe	d0613d5c9175ce49

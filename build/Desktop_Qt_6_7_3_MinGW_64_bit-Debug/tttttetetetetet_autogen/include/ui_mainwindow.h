@@ -408,8 +408,8 @@ public:
         pushButton_9->setObjectName("pushButton_9");
         pushButton_9->setGeometry(QRect(260, 70, 80, 30));
         tableWidget = new QTableWidget(groupBox_4);
-        if (tableWidget->columnCount() < 4)
-            tableWidget->setColumnCount(4);
+        if (tableWidget->columnCount() < 5)
+            tableWidget->setColumnCount(5);
         QTableWidgetItem *__qtablewidgetitem = new QTableWidgetItem();
         tableWidget->setHorizontalHeaderItem(0, __qtablewidgetitem);
         QTableWidgetItem *__qtablewidgetitem1 = new QTableWidgetItem();
@@ -418,10 +418,14 @@ public:
         tableWidget->setHorizontalHeaderItem(2, __qtablewidgetitem2);
         QTableWidgetItem *__qtablewidgetitem3 = new QTableWidgetItem();
         tableWidget->setHorizontalHeaderItem(3, __qtablewidgetitem3);
+        QTableWidgetItem *__qtablewidgetitem4 = new QTableWidgetItem();
+        tableWidget->setHorizontalHeaderItem(4, __qtablewidgetitem4);
         tableWidget->setObjectName("tableWidget");
-        tableWidget->setGeometry(QRect(130, 110, 411, 300));
+        tableWidget->setGeometry(QRect(20, 110, 690, 300));
         tableWidget->setAlternatingRowColors(true);
         tableWidget->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
+        tableWidget->setColumnCount(5);
+        tableWidget->horizontalHeader()->setVisible(true);
         pushButton_8 = new QPushButton(tab);
         pushButton_8->setObjectName("pushButton_8");
         pushButton_8->setGeometry(QRect(500, 470, 150, 40));
@@ -462,7 +466,7 @@ public:
 
         retranslateUi(MainWindow);
 
-        tabWidget->setCurrentIndex(0);
+        tabWidget->setCurrentIndex(1);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -473,9 +477,9 @@ public:
         MainWindow->setWindowTitle(QCoreApplication::translate("MainWindow", "Gestion des V\303\251hicules - Syst\303\250me Moderne", nullptr));
         label_8->setText(QCoreApplication::translate("MainWindow", "\360\237\232\227 Gestion des V\303\251hicules", nullptr));
         groupBox->setTitle(QCoreApplication::translate("MainWindow", "\342\236\225 Ajouter un V\303\251hicule", nullptr));
-        label->setText(QCoreApplication::translate("MainWindow", "Nom du v\303\251hicule:", nullptr));
-        lineEdit->setPlaceholderText(QCoreApplication::translate("MainWindow", "Ex: Toyota Corolla", nullptr));
-        label_2->setText(QCoreApplication::translate("MainWindow", "Immatricule:", nullptr));
+        label->setText(QCoreApplication::translate("MainWindow", "Marque:", nullptr));
+        lineEdit->setPlaceholderText(QCoreApplication::translate("MainWindow", "Ex: Toyota", nullptr));
+        label_2->setText(QCoreApplication::translate("MainWindow", "Matricule:", nullptr));
         lineEdit_2->setPlaceholderText(QCoreApplication::translate("MainWindow", "TUN-1234", nullptr));
         label_4->setText(QCoreApplication::translate("MainWindow", "Kilom\303\251trage (km):", nullptr));
         lineEdit_4->setPlaceholderText(QCoreApplication::translate("MainWindow", "45000", nullptr));
@@ -485,13 +489,13 @@ public:
 
         pushButton->setText(QCoreApplication::translate("MainWindow", "\342\236\225 Ajouter V\303\251hicule", nullptr));
         groupBox_2->setTitle(QCoreApplication::translate("MainWindow", "\360\237\224\215 Rechercher", nullptr));
-        label_3->setText(QCoreApplication::translate("MainWindow", "Nom ou Immatricule:", nullptr));
+        label_3->setText(QCoreApplication::translate("MainWindow", "Marque ou Matricule:", nullptr));
         lineEdit_3->setPlaceholderText(QCoreApplication::translate("MainWindow", "Rechercher...", nullptr));
         pushButton_2->setText(QCoreApplication::translate("MainWindow", "\360\237\224\215 Chercher", nullptr));
         groupBox_3->setTitle(QCoreApplication::translate("MainWindow", "\342\234\217\357\270\217 Modifier un V\303\251hicule", nullptr));
         label_6->setText(QCoreApplication::translate("MainWindow", "Champ \303\240 modifier:", nullptr));
-        comboBox_2->setItemText(0, QCoreApplication::translate("MainWindow", "nom voiture", nullptr));
-        comboBox_2->setItemText(1, QCoreApplication::translate("MainWindow", "immatricule", nullptr));
+        comboBox_2->setItemText(0, QCoreApplication::translate("MainWindow", "marque", nullptr));
+        comboBox_2->setItemText(1, QCoreApplication::translate("MainWindow", "matricule", nullptr));
         comboBox_2->setItemText(2, QCoreApplication::translate("MainWindow", "kilometrage", nullptr));
         comboBox_2->setItemText(3, QCoreApplication::translate("MainWindow", "etat", nullptr));
 
@@ -508,13 +512,15 @@ public:
 
         pushButton_9->setText(QCoreApplication::translate("MainWindow", "\360\237\224\204 Trier", nullptr));
         QTableWidgetItem *___qtablewidgetitem = tableWidget->horizontalHeaderItem(0);
-        ___qtablewidgetitem->setText(QCoreApplication::translate("MainWindow", "Nom V\303\251hicule", nullptr));
+        ___qtablewidgetitem->setText(QCoreApplication::translate("MainWindow", "ID", nullptr));
         QTableWidgetItem *___qtablewidgetitem1 = tableWidget->horizontalHeaderItem(1);
-        ___qtablewidgetitem1->setText(QCoreApplication::translate("MainWindow", "Immatricule", nullptr));
+        ___qtablewidgetitem1->setText(QCoreApplication::translate("MainWindow", "Matricule", nullptr));
         QTableWidgetItem *___qtablewidgetitem2 = tableWidget->horizontalHeaderItem(2);
-        ___qtablewidgetitem2->setText(QCoreApplication::translate("MainWindow", "Kilom\303\251trage", nullptr));
+        ___qtablewidgetitem2->setText(QCoreApplication::translate("MainWindow", "Marque", nullptr));
         QTableWidgetItem *___qtablewidgetitem3 = tableWidget->horizontalHeaderItem(3);
-        ___qtablewidgetitem3->setText(QCoreApplication::translate("MainWindow", "\303\211tat", nullptr));
+        ___qtablewidgetitem3->setText(QCoreApplication::translate("MainWindow", "Kilom\303\251trage", nullptr));
+        QTableWidgetItem *___qtablewidgetitem4 = tableWidget->horizontalHeaderItem(4);
+        ___qtablewidgetitem4->setText(QCoreApplication::translate("MainWindow", "\303\211tat", nullptr));
         pushButton_8->setText(QCoreApplication::translate("MainWindow", "\360\237\223\204 Exporter PDF", nullptr));
         tabWidget->setTabText(tabWidget->indexOf(tab), QCoreApplication::translate("MainWindow", "\360\237\217\240 Accueil", nullptr));
         label_stats_title->setText(QCoreApplication::translate("MainWindow", "\360\237\223\212 Statistiques ", nullptr));

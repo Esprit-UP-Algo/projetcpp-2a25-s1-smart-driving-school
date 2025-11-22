@@ -6,18 +6,18 @@
 Vehicule::Vehicule()
 {
     this->id = 0;
-    this->nom = "";
     this->immatricule = "";
+    this->nom = "";
     this->kilometrage = 0;
     this->etat = "bonne etat";
 }
 
 
-Vehicule::Vehicule(int id, QString nom, QString immat, int km, QString etat)
+Vehicule::Vehicule(int id, QString immat, QString nom, int km, QString etat)
 {
     this->id = id;
-    this->nom = nom;
     this->immatricule = immat;
+    this->nom = nom;
     this->kilometrage = km;
     this->etat = etat;
 }
@@ -27,22 +27,31 @@ bool Vehicule::ajouter()
 {
     QSqlQuery query;
 
+    qDebug() << "=== AJOUT VEHICULE ===";
+    qDebug() << "ID:" << this->id;
+    qDebug() << "Immatricule:" << this->immatricule;
+    qDebug() << "Nom:" << this->nom;
+    qDebug() << "Kilometrage:" << this->kilometrage;
+    qDebug() << "Etat:" << this->etat;
 
-    query.prepare("INSERT INTO VEHICULES (ID, NOM, IMMATRICULE, KILOMETRAGE, ETAT) "
-                  "VALUES (:id, :nom, :immat, :km, :etat)");
-
+    query.prepare("INSERT INTO VEHICULE (ID_U, MATRICULE, MARQUE, KILOMETRAGE, ETAT) "
+                  "VALUES (:id, :matricule, :marque, :km, :etat)");
 
     query.bindValue(":id", this->id);
-    query.bindValue(":nom", this->nom);
-    query.bindValue(":immat", this->immatricule);
+    query.bindValue(":matricule", this->immatricule);
+    query.bindValue(":marque", this->nom);
     query.bindValue(":km", this->kilometrage);
     query.bindValue(":etat", this->etat);
 
-
     if (query.exec()) {
+        qDebug() << "Ajout réussi!";
         return true;
     } else {
-        qDebug() << "Erreur ajout:" << query.lastError().text();
+        qDebug() << "=== ERREUR AJOUT ===";
+        qDebug() << "Message d'erreur:" << query.lastError().text();
+        qDebug() << "Type d'erreur:" << query.lastError().type();
+        qDebug() << "Erreur driver:" << query.lastError().driverText();
+        qDebug() << "Erreur DB:" << query.lastError().databaseText();
         return false;
     }
 }
@@ -52,12 +61,15 @@ QSqlQueryModel* Vehicule::afficher()
 {
     QSqlQueryModel* model = new QSqlQueryModel();
 
-    model->setQuery("SELECT ID, NOM, IMMATRICULE, KILOMETRAGE, ETAT FROM VEHICULES");
+    model->setQuery("SELECT ID_U, MATRICULE, MARQUE, KILOMETRAGE, ETAT FROM VEHICULE");
 
+    if (model->lastError().isValid()) {
+        qDebug() << "Erreur affichage:" << model->lastError().text();
+    }
 
     model->setHeaderData(0, Qt::Horizontal, QObject::tr("ID"));
-    model->setHeaderData(1, Qt::Horizontal, QObject::tr("Nom Véhicule"));
-    model->setHeaderData(2, Qt::Horizontal, QObject::tr("Immatricule"));
+    model->setHeaderData(1, Qt::Horizontal, QObject::tr("Matricule"));
+    model->setHeaderData(2, Qt::Horizontal, QObject::tr("Marque"));
     model->setHeaderData(3, Qt::Horizontal, QObject::tr("Kilométrage"));
     model->setHeaderData(4, Qt::Horizontal, QObject::tr("État"));
 
@@ -69,8 +81,7 @@ bool Vehicule::supprimer(int id)
 {
     QSqlQuery query;
 
-
-    query.prepare("DELETE FROM VEHICULES WHERE ID = :id");
+    query.prepare("DELETE FROM VEHICULE WHERE ID_U = :id");
     query.bindValue(":id", id);
 
     if (query.exec()) {
@@ -86,8 +97,7 @@ bool Vehicule::modifier(int id, QString champ, QString valeur)
 {
     QSqlQuery query;
 
-
-    QString requete = QString("UPDATE VEHICULES SET %1 = :valeur WHERE ID = :id").arg(champ);
+    QString requete = QString("UPDATE VEHICULE SET %1 = :valeur WHERE ID_U = :id").arg(champ);
     query.prepare(requete);
     query.bindValue(":valeur", valeur);
     query.bindValue(":id", id);
@@ -104,18 +114,17 @@ bool Vehicule::modifier(int id, QString champ, QString valeur)
 QSqlQueryModel* Vehicule::rechercher(QString terme)
 {
     QSqlQueryModel* model = new QSqlQueryModel();
+
     QSqlQuery query;
-
-
-    query.prepare("SELECT ID, NOM, IMMATRICULE, KILOMETRAGE, ETAT FROM VEHICULES "
-                  "WHERE LOWER(NOM) LIKE :terme OR LOWER(IMMATRICULE) LIKE :terme");
+    query.prepare("SELECT ID_U, MATRICULE, MARQUE, KILOMETRAGE, ETAT FROM VEHICULE "
+                  "WHERE LOWER(MARQUE) LIKE :terme OR LOWER(MATRICULE) LIKE :terme");
     query.bindValue(":terme", "%" + terme.toLower() + "%");
 
     if (query.exec()) {
-        model->setQuery(query);
+        model->setQuery(std::move(query));
         model->setHeaderData(0, Qt::Horizontal, QObject::tr("ID"));
-        model->setHeaderData(1, Qt::Horizontal, QObject::tr("Nom Véhicule"));
-        model->setHeaderData(2, Qt::Horizontal, QObject::tr("Immatricule"));
+        model->setHeaderData(1, Qt::Horizontal, QObject::tr("Matricule"));
+        model->setHeaderData(2, Qt::Horizontal, QObject::tr("Marque"));
         model->setHeaderData(3, Qt::Horizontal, QObject::tr("Kilométrage"));
         model->setHeaderData(4, Qt::Horizontal, QObject::tr("État"));
     } else {
@@ -130,12 +139,12 @@ QSqlQueryModel* Vehicule::trier(QString critere)
 {
     QSqlQueryModel* model = new QSqlQueryModel();
 
-    QString requete = "SELECT ID, NOM, IMMATRICULE, KILOMETRAGE, ETAT FROM VEHICULES ORDER BY " + critere;
+    QString requete = "SELECT ID_U, MATRICULE, MARQUE, KILOMETRAGE, ETAT FROM VEHICULE ORDER BY " + critere;
     model->setQuery(requete);
 
     model->setHeaderData(0, Qt::Horizontal, QObject::tr("ID"));
-    model->setHeaderData(1, Qt::Horizontal, QObject::tr("Nom Véhicule"));
-    model->setHeaderData(2, Qt::Horizontal, QObject::tr("Immatricule"));
+    model->setHeaderData(1, Qt::Horizontal, QObject::tr("Matricule"));
+    model->setHeaderData(2, Qt::Horizontal, QObject::tr("Marque"));
     model->setHeaderData(3, Qt::Horizontal, QObject::tr("Kilométrage"));
     model->setHeaderData(4, Qt::Horizontal, QObject::tr("État"));
 
@@ -145,8 +154,8 @@ QSqlQueryModel* Vehicule::trier(QString critere)
 QString Vehicule::toString()
 {
     return "Vehicule [ID: " + QString::number(id) +
-           ", Nom: " + nom +
            ", Immatricule: " + immatricule +
+           ", Nom: " + nom +
            ", Kilometrage: " + QString::number(kilometrage) + " km" +
            ", Etat: " + etat + "]";
 }

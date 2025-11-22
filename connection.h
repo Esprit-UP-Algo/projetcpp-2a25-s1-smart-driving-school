@@ -1,21 +1,22 @@
 #ifndef CONNECTION_H
 #define CONNECTION_H
-#include <QSqlDatabase>
-#include <QSqlError>
-#include <QSqlQuery>
+#include <QtSql/QSqlDatabase>
+#include <QtSql/QSqlQuery>
+#include <QtSql/QSqlError>
 #include <QDebug>
-
 class Connection
 {
 public:
     static Connection& createInstance();
     bool createconnect();
+    QSqlDatabase& getDatabase() { return db; }
+    Connection(const Connection&)= delete;
+    Connection& operator=(const Connection&)=delete;
 private:
     QSqlDatabase db;
     Connection();
     ~Connection();
-    Connection(const Connection&)= delete;
-    Connection& operator=(const Connection&)=delete;
+
 };
 
 #endif // CONNECTION_H

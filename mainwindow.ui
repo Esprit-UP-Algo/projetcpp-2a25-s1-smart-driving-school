@@ -212,7 +212,7 @@ QLabel#label_8 {
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -257,7 +257,7 @@ QGroupBox::title {
         </rect>
        </property>
        <property name="text">
-        <string>Nom du véhicule:</string>
+        <string>Marque:</string>
        </property>
       </widget>
       <widget class="QLineEdit" name="lineEdit">
@@ -270,7 +270,7 @@ QGroupBox::title {
         </rect>
        </property>
        <property name="placeholderText">
-        <string>Ex: Toyota Corolla</string>
+        <string>Ex: Toyota</string>
        </property>
       </widget>
       <widget class="QLabel" name="label_2">
@@ -283,7 +283,7 @@ QGroupBox::title {
         </rect>
        </property>
        <property name="text">
-        <string>Immatricule:</string>
+        <string>Matricule:</string>
        </property>
       </widget>
       <widget class="QLineEdit" name="lineEdit_2">
@@ -411,7 +411,7 @@ QGroupBox::title {
         </rect>
        </property>
        <property name="text">
-        <string>Nom ou Immatricule:</string>
+        <string>Marque ou Matricule:</string>
        </property>
       </widget>
       <widget class="QLineEdit" name="lineEdit_3">
@@ -494,12 +494,12 @@ QGroupBox::title {
        </property>
        <item>
         <property name="text">
-         <string>nom voiture</string>
+         <string>marque</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>immatricule</string>
+         <string>matricule</string>
         </property>
        </item>
        <item>
@@ -669,9 +669,9 @@ QGroupBox::title {
       <widget class="QTableWidget" name="tableWidget">
        <property name="geometry">
         <rect>
-         <x>130</x>
+         <x>20</x>
          <y>110</y>
-         <width>411</width>
+         <width>690</width>
          <height>300</height>
         </rect>
        </property>
@@ -681,14 +681,25 @@ QGroupBox::title {
        <property name="selectionBehavior">
         <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
        </property>
+       <property name="columnCount">
+        <number>5</number>
+       </property>
+       <attribute name="horizontalHeaderVisible">
+        <bool>true</bool>
+       </attribute>
        <column>
         <property name="text">
-         <string>Nom Véhicule</string>
+         <string>ID</string>
         </property>
        </column>
        <column>
         <property name="text">
-         <string>Immatricule</string>
+         <string>Matricule</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Marque</string>
         </property>
        </column>
        <column>

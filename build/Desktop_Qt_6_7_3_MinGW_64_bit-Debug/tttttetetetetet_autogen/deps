@@ -4,6 +4,7 @@ tttttetetetetet_autogen/timestamp: \
 	C:/Qt/6.7.3/mingw_64/include/QtCore/q20memory.h \
 	C:/Qt/6.7.3/mingw_64/include/QtCore/q20type_traits.h \
 	C:/Qt/6.7.3/mingw_64/include/QtCore/q23utility.h \
+	C:/Qt/6.7.3/mingw_64/include/QtCore/qabstractitemmodel.h \
 	C:/Qt/6.7.3/mingw_64/include/QtCore/qalgorithms.h \
 	C:/Qt/6.7.3/mingw_64/include/QtCore/qanystringview.h \
 	C:/Qt/6.7.3/mingw_64/include/QtCore/qarraydata.h \
@@ -45,11 +46,13 @@ tttttetetetetet_autogen/timestamp: \
 	C:/Qt/6.7.3/mingw_64/include/QtCore/qhash.h \
 	C:/Qt/6.7.3/mingw_64/include/QtCore/qhashfunctions.h \
 	C:/Qt/6.7.3/mingw_64/include/QtCore/qiodevicebase.h \
+	C:/Qt/6.7.3/mingw_64/include/QtCore/qitemselectionmodel.h \
 	C:/Qt/6.7.3/mingw_64/include/QtCore/qiterable.h \
 	C:/Qt/6.7.3/mingw_64/include/QtCore/qiterator.h \
 	C:/Qt/6.7.3/mingw_64/include/QtCore/qlatin1stringview.h \
 	C:/Qt/6.7.3/mingw_64/include/QtCore/qline.h \
 	C:/Qt/6.7.3/mingw_64/include/QtCore/qlist.h \
+	C:/Qt/6.7.3/mingw_64/include/QtCore/qlocale.h \
 	C:/Qt/6.7.3/mingw_64/include/QtCore/qlogging.h \
 	C:/Qt/6.7.3/mingw_64/include/QtCore/qmalloc.h \
 	C:/Qt/6.7.3/mingw_64/include/QtCore/qmap.h \
@@ -70,6 +73,7 @@ tttttetetetetet_autogen/timestamp: \
 	C:/Qt/6.7.3/mingw_64/include/QtCore/qprocessordetection.h \
 	C:/Qt/6.7.3/mingw_64/include/QtCore/qrect.h \
 	C:/Qt/6.7.3/mingw_64/include/QtCore/qrefcount.h \
+	C:/Qt/6.7.3/mingw_64/include/QtCore/qregularexpression.h \
 	C:/Qt/6.7.3/mingw_64/include/QtCore/qscopedpointer.h \
 	C:/Qt/6.7.3/mingw_64/include/QtCore/qscopeguard.h \
 	C:/Qt/6.7.3/mingw_64/include/QtCore/qset.h \
@@ -140,11 +144,36 @@ tttttetetetetet_autogen/timestamp: \
 	C:/Qt/6.7.3/mingw_64/include/QtGui/qtguiexports.h \
 	C:/Qt/6.7.3/mingw_64/include/QtGui/qtguiglobal.h \
 	C:/Qt/6.7.3/mingw_64/include/QtGui/qtransform.h \
+	C:/Qt/6.7.3/mingw_64/include/QtGui/qvalidator.h \
 	C:/Qt/6.7.3/mingw_64/include/QtGui/qwindowdefs.h \
 	C:/Qt/6.7.3/mingw_64/include/QtGui/qwindowdefs_win.h \
+	C:/Qt/6.7.3/mingw_64/include/QtSql/QSqlError \
+	C:/Qt/6.7.3/mingw_64/include/QtSql/QSqlQuery \
+	C:/Qt/6.7.3/mingw_64/include/QtSql/QSqlQueryModel \
+	C:/Qt/6.7.3/mingw_64/include/QtSql/qsqldatabase.h \
+	C:/Qt/6.7.3/mingw_64/include/QtSql/qsqlerror.h \
+	C:/Qt/6.7.3/mingw_64/include/QtSql/qsqlquery.h \
+	C:/Qt/6.7.3/mingw_64/include/QtSql/qsqlquerymodel.h \
+	C:/Qt/6.7.3/mingw_64/include/QtSql/qtsql-config.h \
+	C:/Qt/6.7.3/mingw_64/include/QtSql/qtsqlexports.h \
+	C:/Qt/6.7.3/mingw_64/include/QtSql/qtsqlglobal.h \
 	C:/Qt/6.7.3/mingw_64/include/QtWidgets/QMainWindow \
+	C:/Qt/6.7.3/mingw_64/include/QtWidgets/QTableWidgetItem \
+	C:/Qt/6.7.3/mingw_64/include/QtWidgets/qabstractitemdelegate.h \
+	C:/Qt/6.7.3/mingw_64/include/QtWidgets/qabstractitemview.h \
+	C:/Qt/6.7.3/mingw_64/include/QtWidgets/qabstractscrollarea.h \
+	C:/Qt/6.7.3/mingw_64/include/QtWidgets/qabstractslider.h \
+	C:/Qt/6.7.3/mingw_64/include/QtWidgets/qabstractspinbox.h \
+	C:/Qt/6.7.3/mingw_64/include/QtWidgets/qframe.h \
 	C:/Qt/6.7.3/mingw_64/include/QtWidgets/qmainwindow.h \
+	C:/Qt/6.7.3/mingw_64/include/QtWidgets/qrubberband.h \
 	C:/Qt/6.7.3/mingw_64/include/QtWidgets/qsizepolicy.h \
+	C:/Qt/6.7.3/mingw_64/include/QtWidgets/qslider.h \
+	C:/Qt/6.7.3/mingw_64/include/QtWidgets/qstyle.h \
+	C:/Qt/6.7.3/mingw_64/include/QtWidgets/qstyleoption.h \
+	C:/Qt/6.7.3/mingw_64/include/QtWidgets/qtabbar.h \
+	C:/Qt/6.7.3/mingw_64/include/QtWidgets/qtableview.h \
+	C:/Qt/6.7.3/mingw_64/include/QtWidgets/qtablewidget.h \
 	C:/Qt/6.7.3/mingw_64/include/QtWidgets/qtabwidget.h \
 	C:/Qt/6.7.3/mingw_64/include/QtWidgets/qtwidgets-config.h \
 	C:/Qt/6.7.3/mingw_64/include/QtWidgets/qtwidgetsexports.h \
@@ -173,6 +202,14 @@ tttttetetetetet_autogen/timestamp: \
 	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6/QtPublicTestHelpers.cmake \
 	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6/QtPublicToolHelpers.cmake \
 	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6/QtPublicWalkLibsHelpers.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Charts/Qt6ChartsAdditionalTargetInfo.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Charts/Qt6ChartsConfig.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Charts/Qt6ChartsConfigVersion.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Charts/Qt6ChartsConfigVersionImpl.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Charts/Qt6ChartsDependencies.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Charts/Qt6ChartsTargets-relwithdebinfo.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Charts/Qt6ChartsTargets.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Charts/Qt6ChartsVersionlessTargets.cmake \
 	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Core/Qt6CoreAdditionalTargetInfo.cmake \
 	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Core/Qt6CoreConfig.cmake \
 	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Core/Qt6CoreConfigExtras.cmake \
@@ -289,6 +326,56 @@ tttttetetetetet_autogen/timestamp: \
 	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6GuiTools/Qt6GuiToolsTargets-relwithdebinfo.cmake \
 	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6GuiTools/Qt6GuiToolsTargets.cmake \
 	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6GuiTools/Qt6GuiToolsVersionlessTargets.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6OpenGL/Qt6OpenGLAdditionalTargetInfo.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6OpenGL/Qt6OpenGLConfig.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6OpenGL/Qt6OpenGLConfigVersion.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6OpenGL/Qt6OpenGLConfigVersionImpl.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6OpenGL/Qt6OpenGLDependencies.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6OpenGL/Qt6OpenGLTargets-relwithdebinfo.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6OpenGL/Qt6OpenGLTargets.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6OpenGL/Qt6OpenGLVersionlessTargets.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsAdditionalTargetInfo.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsConfig.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsConfigVersion.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsConfigVersionImpl.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsDependencies.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsTargets-relwithdebinfo.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsTargets.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6OpenGLWidgets/Qt6OpenGLWidgetsVersionlessTargets.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6PrintSupport/Qt6PrintSupportAdditionalTargetInfo.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6PrintSupport/Qt6PrintSupportConfig.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6PrintSupport/Qt6PrintSupportConfigVersion.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6PrintSupport/Qt6PrintSupportConfigVersionImpl.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6PrintSupport/Qt6PrintSupportDependencies.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6PrintSupport/Qt6PrintSupportPlugins.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6PrintSupport/Qt6PrintSupportTargets-relwithdebinfo.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6PrintSupport/Qt6PrintSupportTargets.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6PrintSupport/Qt6PrintSupportVersionlessTargets.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Sql/Qt6QMimerSQLDriverPluginAdditionalTargetInfo.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Sql/Qt6QMimerSQLDriverPluginConfig.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Sql/Qt6QMimerSQLDriverPluginTargets-relwithdebinfo.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Sql/Qt6QMimerSQLDriverPluginTargets.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Sql/Qt6QODBCDriverPluginAdditionalTargetInfo.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Sql/Qt6QODBCDriverPluginConfig.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Sql/Qt6QODBCDriverPluginTargets-relwithdebinfo.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Sql/Qt6QODBCDriverPluginTargets.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Sql/Qt6QPSQLDriverPluginAdditionalTargetInfo.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Sql/Qt6QPSQLDriverPluginConfig.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Sql/Qt6QPSQLDriverPluginTargets-relwithdebinfo.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Sql/Qt6QPSQLDriverPluginTargets.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Sql/Qt6QSQLiteDriverPluginAdditionalTargetInfo.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Sql/Qt6QSQLiteDriverPluginConfig.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Sql/Qt6QSQLiteDriverPluginTargets-relwithdebinfo.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Sql/Qt6QSQLiteDriverPluginTargets.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Sql/Qt6SqlAdditionalTargetInfo.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Sql/Qt6SqlConfig.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Sql/Qt6SqlConfigVersion.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Sql/Qt6SqlConfigVersionImpl.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Sql/Qt6SqlDependencies.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Sql/Qt6SqlPlugins.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Sql/Qt6SqlTargets-relwithdebinfo.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Sql/Qt6SqlTargets.cmake \
+	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Sql/Qt6SqlVersionlessTargets.cmake \
 	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Widgets/Qt6QModernWindowsStylePluginAdditionalTargetInfo.cmake \
 	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Widgets/Qt6QModernWindowsStylePluginConfig.cmake \
 	C:/Qt/6.7.3/mingw_64/lib/cmake/Qt6Widgets/Qt6QModernWindowsStylePluginTargets-relwithdebinfo.cmake \
