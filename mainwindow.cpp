@@ -19,6 +19,10 @@
 #include <QtCharts/QBarCategoryAxis>
 #include <QtCharts/QValueAxis>
 #include <QVBoxLayout>
+#include <QSettings>
+#include <QCoreApplication>
+#include <QInputDialog>
+#include <QProgressDialog>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -26,6 +30,26 @@ MainWindow::MainWindow(QWidget *parent)
     , selectedId(-1)
 {
     ui->setupUi(this);
+
+    // NOUVEAU: Initialisation de l'EmailSender
+    emailSender = new EmailSender(this);
+
+    // Configuration de l'email depuis config.ini
+    QSettings settings(QCoreApplication::applicationDirPath() + "/config.ini", QSettings::IniFormat);
+    QString smtpServer = settings.value("Email/smtp_server", "smtp.gmail.com").toString();
+    int smtpPort = settings.value("Email/smtp_port", 587).toInt();
+    QString emailUser = settings.value("Email/username", "").toString();
+    QString emailPass = settings.value("Email/password", "").toString();
+    QString fromName = settings.value("Email/from_name", "Auto-École Gestion").toString();
+
+    if (!emailUser.isEmpty() && !emailPass.isEmpty()) {
+        emailSender->setSmtpServer(smtpServer, smtpPort);
+        emailSender->setCredentials(emailUser, emailPass);
+        emailSender->setFromAddress(emailUser, fromName);
+        qDebug() << "Configuration email chargée avec succès";
+    } else {
+        qDebug() << "AVERTISSEMENT: Configuration email manquante dans config.ini";
+    }
 
     refreshTable(Vtmp.afficher());
     connect(ui->tabWidget, &QTabWidget::currentChanged, this, &MainWindow::on_tabWidget_currentChanged);
@@ -382,7 +406,7 @@ void MainWindow::updateStatistics()
 
 
     QBarSet *set = new QBarSet("Statistiques");
-    *set << totalVehicles << goodCondition << brokenDown << (avgKm / 1000); // Convert km to thousands for better visualization
+    *set << totalVehicles << goodCondition << brokenDown << (avgKm / 1000);
     set->setColor(QColor("#009688"));
 
     QBarSeries *barSeries = new QBarSeries();
@@ -441,4 +465,143 @@ void MainWindow::updateStatistics()
     ui->label_stats_info->setText(html);
     ui->label_stats_info->setTextFormat(Qt::RichText);
     ui->label_stats_info->setGeometry(50, 20, 400, 150);
+}
+
+
+
+void MainWindow::on_pushButton_email_clicked()
+{
+
+    QSqlQuery query;
+    query.exec("SELECT COUNT(*) FROM VEHICULE WHERE ETAT = 'bonne etat'");
+
+    int availableCount = 0;
+    if (query.next()) {
+        availableCount = query.value(0).toInt();
+    }
+
+    if (availableCount == 0) {
+        QMessageBox::warning(this, "Aucun véhicule",
+                             "Il n'y a aucun véhicule en bon état à notifier.");
+        return;
+    }
+
+
+    QString instructorEmail = selectInstructor();
+
+    if (instructorEmail.isEmpty()) {
+        return; // L'utilisateur a annulé
+    }
+
+    // Préparer le contenu de l'email
+    QString vehiclesText = getAvailableVehiclesText();
+    QString subject = "Véhicules Disponibles - Liste du " +
+                      QDateTime::currentDateTime().toString("dd/MM/yyyy");
+
+    QString body = "Bonjour,\n\n";
+    body += "Voici la liste des véhicules disponibles et en bon état:\n\n";
+    body += vehiclesText;
+    body += "\nTotal de véhicules disponibles: " + QString::number(availableCount) + "\n\n";
+    body += "Cordialement,\n";
+    body += "Système de Gestion des Véhicules";
+
+    // Afficher une boîte de dialogue de progression
+    QProgressDialog progress("Envoi de l'email en cours...", "Annuler", 0, 0, this);
+    progress.setWindowModality(Qt::WindowModal);
+    progress.setMinimumDuration(0);
+    progress.setValue(0);
+    progress.show();
+    QApplication::processEvents();
+
+    // Envoyer l'email
+    bool success = emailSender->sendEmail(instructorEmail, "Instructeur", subject, body);
+
+    progress.close();
+
+    if (success) {
+        QMessageBox::information(this, "Succès",
+                                 "Email envoyé avec succès à " + instructorEmail + "!");
+    } else {
+        QMessageBox::critical(this, "Erreur d'envoi",
+                              "Impossible d'envoyer l'email:\n" + emailSender->lastError());
+    }
+}
+
+QString MainWindow::getAvailableVehiclesText()
+{
+    QString text;
+    QSqlQuery query;
+
+    query.exec("SELECT MARQUE, MATRICULE, KILOMETRAGE FROM VEHICULE WHERE ETAT = 'bonne etat' ORDER BY MARQUE");
+
+    int count = 1;
+    while (query.next()) {
+        QString marque = query.value(0).toString();
+        QString matricule = query.value(1).toString();
+        int km = query.value(2).toInt();
+
+        text += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+        text += "🚗 Véhicule #" + QString::number(count++) + "\n";
+        text += "   Marque: " + marque + "\n";
+        text += "   Immatricule: " + matricule + "\n";
+        text += "   Kilométrage: " + QString::number(km) + " km\n";
+        text += "   État: Bonne état\n\n";
+    }
+
+    text += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+
+    return text;
+}
+
+QStringList MainWindow::getInstructorsList()
+{
+    QStringList instructors;
+    QSqlQuery query;
+
+    // Simply get all instructors from the MONITEUR table
+    if (query.exec("SELECT NOM, PRENOM, MAIL FROM MONITEUR ORDER BY NOM")) {
+        while (query.next()) {
+            QString nom = query.value(0).toString();
+            QString prenom = query.value(1).toString();
+            QString email = query.value(2).toString();
+
+            instructors << (nom + " " + prenom + " (" + email + ")");
+        }
+    } else {
+        qDebug() << "Erreur récupération moniteurs:" << query.lastError().text();
+    }
+
+    return instructors;
+}
+
+QString MainWindow::selectInstructor()
+{
+    QStringList instructors = getInstructorsList();
+
+    if (instructors.isEmpty()) {
+        QMessageBox::warning(this, "Aucun moniteur",
+                             "Aucun moniteur trouvé dans la base de données.\n\n"
+                             "Veuillez d'abord ajouter des moniteurs dans la table MONITEUR.");
+        return QString();
+    }
+
+    bool ok;
+    QString selected = QInputDialog::getItem(this,
+                                             "Sélectionner un moniteur",
+                                             "Choisissez le moniteur à notifier:",
+                                             instructors,
+                                             0,
+                                             false,
+                                             &ok);
+
+    if (ok && !selected.isEmpty()) {
+        // Extraire l'email entre parenthèses
+        int start = selected.indexOf('(');
+        int end = selected.indexOf(')');
+        if (start != -1 && end != -1) {
+            return selected.mid(start + 1, end - start - 1);
+        }
+    }
+
+    return QString();
 }

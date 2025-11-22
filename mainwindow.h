@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QTableWidgetItem>
 #include "vehicule.h"
+#include "emailsender.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -27,15 +28,22 @@ private slots:
     void on_pushButton_8_clicked();
     void on_pushButton_9_clicked();
     void on_pushButton_10_clicked();
+    void on_pushButton_email_clicked();  // NOUVEAU: Bouton email
     void on_tableWidget_clicked(const QModelIndex &index);
 
 private:
     Ui::MainWindow *ui;
     Vehicule Vtmp;
     int selectedId;
-    void updateStatistics();
+    EmailSender *emailSender;  // NOUVEAU: Gestionnaire d'emails
 
+    void updateStatistics();
     void refreshTable(QSqlQueryModel* model);
+
+    // NOUVEAU: Méthodes email
+    QString getAvailableVehiclesText();
+    QStringList getInstructorsList();
+    QString selectInstructor();
 };
 
 #endif // MAINWINDOW_H

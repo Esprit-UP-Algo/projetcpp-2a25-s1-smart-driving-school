@@ -62,10 +62,10 @@ public:
     QPushButton *pushButton_9;
     QTableWidget *tableWidget;
     QPushButton *pushButton_8;
+    QPushButton *pushButton_email;
     QWidget *tab_2;
     QLabel *label_stats_title;
     QLabel *label_stats_info;
-    QWidget *widget;
     QMenuBar *menubar;
     QStatusBar *statusbar;
 
@@ -190,14 +190,14 @@ public:
 "        stop:0 #D32F2F, stop:1 #B71C1C);\n"
 "}\n"
 "\n"
-"QPushButton#pushButton_8 {\n"
+"QPushButton#pushButton_8, QPushButton#pushButton_email {\n"
 "    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
 "        stop:0 #4CAF50, stop:1 #388E3C);\n"
 "}\n"
 "\n"
-"QPushButton#pushButton_8:hover {\n"
-"    background: qli"
-                        "neargradient(x1:0, y1:0, x2:0, y2:1,\n"
+"QPushButton#pushButton_8:h"
+                        "over, QPushButton#pushButton_email:hover {\n"
+"    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,\n"
 "        stop:0 #388E3C, stop:1 #2E7D32);\n"
 "}\n"
 "\n"
@@ -242,11 +242,11 @@ public:
 "    font-size: 13px;\n"
 "}\n"
 "\n"
-"QLabel#label_8 {\n"
+"QLab"
+                        "el#label_8 {\n"
 "    color: #009688;\n"
 "    font-size: 26px;\n"
-""
-                        "    font-weight: bold;\n"
+"    font-weight: bold;\n"
 "}"));
         centralwidget = new QWidget(MainWindow);
         centralwidget->setObjectName("centralwidget");
@@ -372,7 +372,7 @@ public:
         pushButton_10->setGeometry(QRect(100, 110, 150, 35));
         groupBox_4 = new QGroupBox(tab);
         groupBox_4->setObjectName("groupBox_4");
-        groupBox_4->setGeometry(QRect(390, 20, 730, 430));
+        groupBox_4->setGeometry(QRect(390, 20, 730, 550));
         groupBox_4->setStyleSheet(QString::fromUtf8("QGroupBox {\n"
 "    background: white;\n"
 "    border: 2px solid #009688;\n"
@@ -421,14 +421,17 @@ public:
         QTableWidgetItem *__qtablewidgetitem4 = new QTableWidgetItem();
         tableWidget->setHorizontalHeaderItem(4, __qtablewidgetitem4);
         tableWidget->setObjectName("tableWidget");
-        tableWidget->setGeometry(QRect(20, 110, 690, 300));
+        tableWidget->setGeometry(QRect(20, 110, 690, 380));
         tableWidget->setAlternatingRowColors(true);
         tableWidget->setSelectionBehavior(QAbstractItemView::SelectionBehavior::SelectRows);
         tableWidget->setColumnCount(5);
         tableWidget->horizontalHeader()->setVisible(true);
-        pushButton_8 = new QPushButton(tab);
+        pushButton_8 = new QPushButton(groupBox_4);
         pushButton_8->setObjectName("pushButton_8");
-        pushButton_8->setGeometry(QRect(500, 470, 150, 40));
+        pushButton_8->setGeometry(QRect(20, 500, 180, 40));
+        pushButton_email = new QPushButton(groupBox_4);
+        pushButton_email->setObjectName("pushButton_email");
+        pushButton_email->setGeometry(QRect(210, 500, 200, 40));
         tabWidget->addTab(tab, QString());
         tab_2 = new QWidget();
         tab_2->setObjectName("tab_2");
@@ -448,12 +451,6 @@ public:
 "padding: 30px;"));
         label_stats_info->setAlignment(Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop);
         label_stats_info->setWordWrap(true);
-        widget = new QWidget(tab_2);
-        widget->setObjectName("widget");
-        widget->setGeometry(QRect(919, 449, 151, 111));
-        widget->setStyleSheet(QString::fromUtf8("QWidget {\n"
-"    border-image: url(\"C:/Users/Fethia Braiki/Downloads/logo.jpeg\") 0 0 0 0 stretch stretch;\n"
-"}"));
         tabWidget->addTab(tab_2, QString());
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
@@ -466,7 +463,7 @@ public:
 
         retranslateUi(MainWindow);
 
-        tabWidget->setCurrentIndex(1);
+        tabWidget->setCurrentIndex(0);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -522,6 +519,7 @@ public:
         QTableWidgetItem *___qtablewidgetitem4 = tableWidget->horizontalHeaderItem(4);
         ___qtablewidgetitem4->setText(QCoreApplication::translate("MainWindow", "\303\211tat", nullptr));
         pushButton_8->setText(QCoreApplication::translate("MainWindow", "\360\237\223\204 Exporter PDF", nullptr));
+        pushButton_email->setText(QCoreApplication::translate("MainWindow", "\360\237\223\247 Notifier Instructeur", nullptr));
         tabWidget->setTabText(tabWidget->indexOf(tab), QCoreApplication::translate("MainWindow", "\360\237\217\240 Accueil", nullptr));
         label_stats_title->setText(QCoreApplication::translate("MainWindow", "\360\237\223\212 Statistiques ", nullptr));
         label_stats_info->setText(QString());
