@@ -26,6 +26,9 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    QString getClientInfoById(int id) const;
+    QString getTransactionInfoById(int id) const;
+
     double getTotalIncome() const;
     double getTotalExpenses() const;
     double getTotalBalance() const;
@@ -57,7 +60,8 @@ private:
     void loadTableData();
     void detachModel();
     void clearForm();
-    void updateDashboard();
+    void initYearFilter();
+    void updateDashboard(int year = 0);   // 0 = all years
 
     QChartView *chartViewBalance = nullptr;   // NEW: dashboard chart
 };

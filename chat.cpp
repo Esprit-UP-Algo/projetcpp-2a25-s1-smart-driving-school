@@ -3,6 +3,8 @@
 #include <random>
 #include <algorithm>
 #include "mainwindow.h"
+#include <QRegularExpression>
+
 
 chat::chat(QWidget *parent)
     : QDialog(parent)
@@ -115,6 +117,27 @@ QString chat::generateChatbotReply(const QString& message)
 {
     QString reply;
     QString m = message.toLower();
+
+
+    // 1) "transaction 3"
+    if (m.contains("transaction") && m_mainWindow) {
+        QRegularExpression re("(transaction[^0-9]*)(\\d+)");
+        QRegularExpressionMatch match = re.match(m);
+        if (match.hasMatch()) {
+            int id = match.captured(2).toInt();
+            return m_mainWindow->getTransactionInfoById(id);
+        }
+    }
+
+    // 2) "id 3"  (default: treat as transaction ID)
+    if (m.contains("id") && m_mainWindow) {
+        QRegularExpression re("(id[^0-9]*)(\\d+)");
+        QRegularExpressionMatch match = re.match(m);
+        if (match.hasMatch()) {
+            int id = match.captured(2).toInt();
+            return m_mainWindow->getTransactionInfoById(id);
+        }
+    }
 
     // ---------- FINANCE / PROJECT QUESTIONS (use data) ----------
 

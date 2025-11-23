@@ -31,6 +31,7 @@
 #include <QtCharts/QBarCategoryAxis>
 #include <QtCharts/QValueAxis>
 #include <QDebug>
+#include <QPixmap>
 #include <QtCharts/QPieSeries>
 #include "qr/qrcodegen.hpp"
 using namespace qrcodegen;
@@ -43,6 +44,18 @@ MainWindow::MainWindow(QWidget *parent)
 
     chatWindow = new chat(this);
     chatWindow->setMainWindow(this);
+    QPixmap logo(":/resource/logoN.jpg"); // your qrc path
+    if (!logo.isNull()) {
+        ui->logoLabel->setPixmap(
+            logo.scaled(ui->logoLabel->size(),
+                        Qt::KeepAspectRatio,
+                        Qt::SmoothTransformation)
+            );
+        ui->logoLabel->setAlignment(Qt::AlignCenter);
+    }
+
+    initYearFilter();
+
 
     // === Create chart view for the Dashboard ===
     chartViewBalance = new QChartView(ui->groupBox_search_7);
@@ -75,29 +88,56 @@ void MainWindow::detachModel()
 }
 
 
-void MainWindow::updateDashboard()
+
+void MainWindow::updateDashboard(int year)
 {
     double totalIncome  = 0.0;
     double totalExpense = 0.0;
 
-    QSqlQuery query;
+    // Build WHERE clause for year filter (Oracle)
+    QString yearFilter;
+    if (year > 0) {
+        yearFilter = " AND EXTRACT(YEAR FROM DATE_TRANSACTION) = :year";
+    }
 
     // ---------- Total revenues ----------
-    if (!query.exec("SELECT COALESCE(SUM(AMOUNT), 0) FROM TRANSACTION WHERE TYPE = 'incom'")) {
-        qDebug() << "Error income:" << query.lastError().text();
-        return;
-    }
-    if (query.next()) {
-        totalIncome = query.value(0).toDouble();
+    {
+        QSqlQuery query;
+        QString sqlIncome =
+            "SELECT COALESCE(SUM(AMOUNT), 0) "
+            "FROM TRANSACTION "
+            "WHERE TYPE = 'incom'" + yearFilter;
+
+        query.prepare(sqlIncome);
+        if (year > 0)
+            query.bindValue(":year", year);
+
+        if (!query.exec()) {
+            qDebug() << "Error income:" << query.lastError().text();
+            return;
+        }
+        if (query.next())
+            totalIncome = query.value(0).toDouble();
     }
 
     // ---------- Total expenses ----------
-    if (!query.exec("SELECT COALESCE(SUM(AMOUNT), 0) FROM TRANSACTION WHERE TYPE = 'expense'")) {
-        qDebug() << "Error expense:" << query.lastError().text();
-        return;
-    }
-    if (query.next()) {
-        totalExpense = query.value(0).toDouble();
+    {
+        QSqlQuery query;
+        QString sqlExpense =
+            "SELECT COALESCE(SUM(AMOUNT), 0) "
+            "FROM TRANSACTION "
+            "WHERE TYPE = 'expense'" + yearFilter;
+
+        query.prepare(sqlExpense);
+        if (year > 0)
+            query.bindValue(":year", year);
+
+        if (!query.exec()) {
+            qDebug() << "Error expense:" << query.lastError().text();
+            return;
+        }
+        if (query.next())
+            totalExpense = query.value(0).toDouble();
     }
 
     double balance = totalIncome - totalExpense;
@@ -107,44 +147,71 @@ void MainWindow::updateDashboard()
     ui->lcdExpense->display(totalExpense);
     ui->lcdBalance->display(balance);
 
-    // Optional: change color of balance depending on sign
     if (balance >= 0)
         ui->lcdBalance->setStyleSheet("color: green;");
     else
         ui->lcdBalance->setStyleSheet("color: red;");
 
     // ---------- Mini pie chart ----------
-    if (chartViewBalance) {
-        // Remove old chart to avoid leaks
-        if (chartViewBalance->chart())
-            delete chartViewBalance->chart();
-
-        QPieSeries *series = new QPieSeries();
-        series->append("Revenus",  totalIncome);
-        series->append("Dépenses", totalExpense);
-
-        QChart *chart = new QChart();
-        chart->addSeries(series);
-        chart->setTitle("Répartition revenus / dépenses");
-        chart->legend()->setAlignment(Qt::AlignBottom);
-
-        chartViewBalance->setChart(chart);
+    if (!chartViewBalance) {
+        qDebug() << "chartViewBalance is nullptr";
+        return;
     }
+
+    // Remove old chart to avoid leaks
+    if (chartViewBalance->chart())
+        delete chartViewBalance->chart();
+
+    QPieSeries *series = new QPieSeries();
+    series->append("Revenus",  totalIncome);
+    series->append("Dépenses", totalExpense);
+
+    QChart *chart = new QChart();
+    chart->addSeries(series);
+    chart->setTitle("Répartition revenus / dépenses");
+    chart->legend()->setAlignment(Qt::AlignBottom);
+
+    chartViewBalance->setChart(chart);
 }
 
-
-void MainWindow::loadTableData()
+void MainWindow::initYearFilter()
 {
-    detachModel();
-    modelTransactions = Transaction::afficherTous();
-    ui->tableViewTRANS->setModel(modelTransactions);
-    ui->tableViewTRANS->verticalHeader()->setVisible(false);
-    // (re)connect row change signal
-    if (ui->tableViewTRANS->selectionModel()) {
-        connect(ui->tableViewTRANS->selectionModel(), &QItemSelectionModel::currentRowChanged,
-                this, &MainWindow::onTableCurrentChanged);
+    // safety: if comboYear doesn’t exist, do nothing
+    if (!ui->comboYear) {
+        qDebug() << "comboYear is nullptr – check objectName in .ui";
+        return;
     }
+
+    ui->comboYear->clear();
+    ui->comboYear->addItem("Tous", 0);   // 0 => all years
+
+    QSqlQuery query;
+    query.prepare(
+        "SELECT DISTINCT EXTRACT(YEAR FROM DATE_TRANSACTION) AS ANNEE "
+        "FROM TRANSACTION "
+        "ORDER BY ANNEE"
+        );
+
+    if (!query.exec()) {
+        qDebug() << "initYearFilter error:" << query.lastError().text();
+        return;
+    }
+
+    while (query.next()) {
+        int year = query.value(0).toInt();
+        ui->comboYear->addItem(QString::number(year), year);
+    }
+
+    // when the year changes, refresh dashboard
+    connect(ui->comboYear,
+            QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this,
+            [this](int index){
+                int year = ui->comboYear->itemData(index).toInt(); // 0 or real year
+                updateDashboard(year);
+            });
 }
+
 
 void MainWindow::onTableCurrentChanged(const QModelIndex &current, const QModelIndex &)
 {
@@ -297,6 +364,19 @@ void MainWindow::clearForm()
     ui->METHOD->setCurrentIndex(0);
     ui->dateEdit->setDate(QDate::currentDate());
 }
+
+void MainWindow::loadTableData()
+{
+    // modelTransactions is (probably) a QSqlQueryModel* member
+    if (modelTransactions) {
+        delete modelTransactions;
+        modelTransactions = nullptr;
+    }
+
+    modelTransactions = Transaction::afficherTous();   // your existing static method
+    ui->tableViewTRANS->setModel(modelTransactions);
+}
+
 
 void MainWindow::on_addButton_clicked()
 {
@@ -502,4 +582,66 @@ double MainWindow::getTotalExpenses() const
 double MainWindow::getTotalBalance() const
 {
     return ui->lcdBalance->value();
+}
+
+QString MainWindow::getClientInfoById(int id) const
+{
+    QSqlQuery query;
+    query.prepare("SELECT name, phone, email FROM clients WHERE id = :id");
+    query.bindValue(":id", id);
+
+    if (!query.exec() || !query.next())
+        return "Aucun client avec cet ID.";
+
+    QString name  = query.value(0).toString();
+    QString phone = query.value(1).toString();
+    QString email = query.value(2).toString();
+
+    return QString("Client #%1\nNom: %2\nTéléphone: %3\nEmail: %4")
+        .arg(id).arg(name, phone, email);
+}
+
+QString MainWindow::getTransactionInfoById(int id) const
+{
+    QAbstractItemModel *model = ui->tableViewTRANS->model();
+    if (!model)
+        return "Erreur : aucun modèle associé au tableau de transactions.";
+
+    // We assume the columns of tableViewTRANS are:
+    // 0: ID_T
+    // 1: TYPE
+    // 2: DATE_TRANSACTION
+    // 3: AMOUNT
+    // 4: CATEGORY
+    // 5: METHODE
+    // (adapt column indices if your order is different)
+
+    for (int row = 0; row < model->rowCount(); ++row) {
+        int rowId = model->index(row, 0).data().toInt();  // col 0 = ID_T
+        if (rowId == id) {
+            QString type        = model->index(row, 1).data().toString();
+            QString date        = model->index(row, 2).data().toString();
+            double  amount      = model->index(row, 3).data().toDouble();
+            QString category    = model->index(row, 4).data().toString();
+            QString methode     = model->index(row, 5).data().toString();
+            // optional: ID_C if you show it in a column:
+            // QString id_c    = model->index(row, 6).data().toString();
+
+            return QString(
+                       "Transaction #%1\n"
+                       "Type : %2\n"
+                       "Date : %3\n"
+                       "Montant : %4\n"
+                       "Catégorie : %5\n"
+                       "Méthode : %6")
+                .arg(id)
+                .arg(type)
+                .arg(date)
+                .arg(amount)
+                .arg(category)
+                .arg(methode);
+        }
+    }
+
+    return "Aucune transaction avec cet ID.";
 }
