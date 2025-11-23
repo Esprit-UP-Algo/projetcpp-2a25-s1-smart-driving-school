@@ -1,37 +1,29 @@
 #include "mainwindow.h"
-#include "connexion.h"
+#include "connection.h"
 
 #include <QApplication>
 #include <QMessageBox>
-#include <QDebug>
-#include <QtSql/QSqlDatabase>
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    Connexion c;
-    const bool ok = c.ouvrirConnexion();
-
-    if (!ok) {
-        QMessageBox::critical(
-            nullptr,
-            QObject::tr("Échec"),
-            QObject::tr("Échec de connexion à la base de données.\n"
-                        "Cliquez OK pour quitter.")
-            );
-        return -1;
+    // 1) Ouvrir la base AVANT toute requête/affichage
+    Connection c;
+    if (!c.createconnect()) {
+        QMessageBox::critical(nullptr,
+                              QObject::tr("Base de données"),
+                              QObject::tr("Échec d'ouverture de la base.\nVérifiez DSN/driver/identifiants."));
+        return 1; // on ne continue pas si la BD n'est pas ouverte
     }
 
+    // 2) Lancer l'UI une fois connecté
     MainWindow w;
     w.show();
 
-    QMessageBox::information(
-        &w,
-        QObject::tr("Base de données"),
-        QObject::tr("FÉLICITATIONS, vous êtes connecté à la base !\n"
-                    "Cliquez OK pour continuer.")
-        );
+    // (Optionnel) message d’info non bloquant
+    // QMessageBox::information(&w, QObject::tr("Base de données"),
+    //                          QObject::tr("Connexion réussie."));
 
     return a.exec();
 }
