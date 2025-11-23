@@ -28,10 +28,11 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , selectedId(-1)
+    , voiceRecognition(nullptr)
 {
     ui->setupUi(this);
 
-    // NOUVEAU: Initialisation de l'EmailSender
+    // Initialisation de l'EmailSender
     emailSender = new EmailSender(this);
 
     // Configuration de l'email depuis config.ini
@@ -247,9 +248,24 @@ void MainWindow::on_pushButton_5_clicked()
 
 void MainWindow::on_pushButton_8_clicked()
 {
+    // First check if there are any broken vehicles
+    QSqlQuery checkQuery;
+    checkQuery.exec("SELECT COUNT(*) FROM VEHICULE WHERE ETAT = 'en panne'");
+
+    int brokenCount = 0;
+    if (checkQuery.next()) {
+        brokenCount = checkQuery.value(0).toInt();
+    }
+
+    if (brokenCount == 0) {
+        QMessageBox::information(this, "Aucun véhicule en panne",
+                                 "Il n'y a aucun véhicule en panne à signaler.\n\nTous les véhicules sont en bon état !");
+        return;
+    }
+
     QString fileName = QFileDialog::getSaveFileName(this,
-                                                    tr("Exporter en PDF"),
-                                                    QDir::homePath() + "/vehicules_" +
+                                                    tr("Exporter en PDF - Véhicules en Panne"),
+                                                    QDir::homePath() + "/vehicules_en_panne_" +
                                                         QDateTime::currentDateTime().toString("yyyy-MM-dd_hh-mm") + ".pdf",
                                                     tr("PDF Files (*.pdf)"));
 
@@ -265,38 +281,72 @@ void MainWindow::on_pushButton_8_clicked()
 
     QString htmlContent = "<html><head><style>"
                           "body { font-family: Arial, sans-serif; margin: 20px; }"
-                          "h1 { color: #2c3e50; text-align: center; margin-bottom: 10px; }"
+                          "h1 { color: #d32f2f; text-align: center; margin-bottom: 10px; }"
+                          ".warning-box { background-color: #ffebee; border: 2px solid #d32f2f; padding: 15px; margin: 20px 0; border-radius: 8px; }"
+                          ".warning-icon { color: #d32f2f; font-size: 24pt; font-weight: bold; }"
                           "table { width: 100%; border-collapse: collapse; margin-top: 20px; }"
-                          "th { background-color: #3498db; color: white; padding: 10px; border: 1px solid #2980b9; }"
+                          "th { background-color: #d32f2f; color: white; padding: 10px; border: 1px solid #c62828; }"
                           "td { padding: 8px; border: 1px solid #ddd; text-align: left; }"
-                          "tr:nth-child(even) { background-color: #f2f2f2; }"
+                          "tr { background-color: #ffcdd2; }"
                           ".footer { margin-top: 30px; text-align: center; font-size: 10pt; color: #7f8c8d; }"
-                          ".subtitle { text-align: center; color: #7f8c8d; margin-bottom: 20px; }"
+                          ".subtitle { text-align: center; color: #d32f2f; margin-bottom: 20px; font-weight: bold; }"
+                          ".recommendation { background-color: #fff3cd; border: 2px solid #ff9800; padding: 15px; margin: 20px 0; border-radius: 8px; }"
+                          ".recommendation h2 { color: #ff6f00; margin-top: 0; }"
+                          ".recommendation ul { line-height: 1.8; }"
                           "</style></head><body>";
 
-    htmlContent += "<h1>LISTE DES VÉHICULES</h1>";
+    htmlContent += "<h1>⚠️ VÉHICULES EN PANNE - RAPPORT URGENT</h1>";
     htmlContent += "<p class='subtitle'>Généré le : " +
                    QDateTime::currentDateTime().toString("dd/MM/yyyy à hh:mm") + "</p>";
 
+    // Warning box
+    htmlContent += "<div class='warning-box'>";
+    htmlContent += "<div class='warning-icon'>⚠️ ATTENTION</div>";
+    htmlContent += "<p style='margin: 10px 0 0 0; font-size: 12pt;'>";
+    htmlContent += "Les véhicules listés ci-dessous sont actuellement <strong>EN PANNE</strong> ";
+    htmlContent += "et nécessitent une intervention immédiate.";
+    htmlContent += "</p>";
+    htmlContent += "</div>";
+
+    // Table of broken vehicles
     htmlContent += "<table>";
     htmlContent += "<tr><th>ID</th><th>Nom Véhicule</th><th>Immatricule</th><th>Kilométrage</th><th>État</th></tr>";
 
-    QSqlQueryModel* model = Vtmp.afficher();
+    QSqlQuery query;
+    query.exec("SELECT ID_U, MATRICULE, MARQUE, KILOMETRAGE, ETAT FROM VEHICULE WHERE ETAT = 'en panne' ORDER BY MARQUE");
 
-    for (int row = 0; row < model->rowCount(); row++) {
+    while (query.next()) {
         htmlContent += "<tr>";
-        for (int col = 0; col < model->columnCount(); col++) {
-            QString value = model->data(model->index(row, col)).toString();
-            htmlContent += "<td>" + value + "</td>";
-        }
+        htmlContent += "<td>" + query.value(0).toString() + "</td>";
+        htmlContent += "<td>" + query.value(2).toString() + "</td>";
+        htmlContent += "<td>" + query.value(1).toString() + "</td>";
+        htmlContent += "<td>" + query.value(3).toString() + " km</td>";
+        htmlContent += "<td style='color: #c62828; font-weight: bold;'>EN PANNE</td>";
         htmlContent += "</tr>";
     }
 
     htmlContent += "</table>";
 
+    // Recommendations section
+    htmlContent += "<div class='recommendation'>";
+    htmlContent += "<h2>📋 RECOMMANDATIONS URGENTES</h2>";
+    htmlContent += "<p><strong>Actions à entreprendre immédiatement :</strong></p>";
+    htmlContent += "<ul>";
+    htmlContent += "<li><strong>Atelier de réparation :</strong> Conduire ou remorquer les véhicules vers un garage agréé pour diagnostic et réparation</li>";
+    htmlContent += "<li><strong>Visite technique :</strong> Prévoir une inspection complète et une visite technique obligatoire après réparation</li>";
+    htmlContent += "<li><strong>Contrôle de sécurité :</strong> Vérifier l'état des freins, pneus, et systèmes de sécurité</li>";
+    htmlContent += "<li><strong>Documentation :</strong> Conserver tous les justificatifs de réparation pour le suivi</li>";
+    htmlContent += "<li><strong>Mise hors service :</strong> Ne pas utiliser ces véhicules avant réparation complète</li>";
+    htmlContent += "</ul>";
+    htmlContent += "<p style='color: #d32f2f; font-weight: bold; margin-top: 15px;'>";
+    htmlContent += "⚠️ Ces véhicules doivent être retirés du service jusqu'à leur remise en état conforme.";
+    htmlContent += "</p>";
+    htmlContent += "</div>";
+
     htmlContent += "<div class='footer'>";
-    htmlContent += "<p><strong>Total de véhicules : " + QString::number(model->rowCount()) + "</strong></p>";
+    htmlContent += "<p><strong>Total de véhicules en panne : " + QString::number(brokenCount) + "</strong></p>";
     htmlContent += "<p>Document généré automatiquement par le système de gestion des véhicules</p>";
+    htmlContent += "<p style='color: #d32f2f;'>Ce rapport nécessite une action immédiate de la part de la direction</p>";
     htmlContent += "</div>";
 
     htmlContent += "</body></html>";
@@ -305,9 +355,10 @@ void MainWindow::on_pushButton_8_clicked()
     document.setHtml(htmlContent);
     document.print(&printer);
 
-    delete model;
-
-    QMessageBox::information(this, "Succès", "Le fichier PDF a été exporté avec succès!\n\nEmplacement : " + fileName);
+    QMessageBox::information(this, "Succès",
+                             "Le rapport des véhicules en panne a été exporté avec succès!\n\n"
+                             "Nombre de véhicules en panne : " + QString::number(brokenCount) + "\n"
+                                                                  "Emplacement : " + fileName);
 }
 
 void MainWindow::on_pushButton_9_clicked()
@@ -358,12 +409,10 @@ void MainWindow::updateStatistics()
     query.exec("SELECT AVG(KILOMETRAGE) FROM VEHICULE");
     if (query.next()) avgKm = query.value(0).toDouble();
 
-
     QWidget* statsWidget = ui->tab_2->findChild<QWidget*>("statsContainer");
     if (statsWidget) {
         delete statsWidget;
     }
-
 
     QWidget* container = new QWidget(ui->tab_2);
     container->setObjectName("statsContainer");
@@ -371,7 +420,6 @@ void MainWindow::updateStatistics()
 
     QVBoxLayout* mainLayout = new QVBoxLayout(container);
     mainLayout->setSpacing(20);
-
 
     QPieSeries *pieSeries = new QPieSeries();
     pieSeries->append("Bonne état", goodCondition);
@@ -403,7 +451,6 @@ void MainWindow::updateStatistics()
     QChartView *pieChartView = new QChartView(pieChart);
     pieChartView->setRenderHint(QPainter::Antialiasing);
     pieChartView->setMinimumHeight(250);
-
 
     QBarSet *set = new QBarSet("Statistiques");
     *set << totalVehicles << goodCondition << brokenDown << (avgKm / 1000);
@@ -438,13 +485,11 @@ void MainWindow::updateStatistics()
     barChartView->setRenderHint(QPainter::Antialiasing);
     barChartView->setMinimumHeight(250);
 
-
     mainLayout->addWidget(pieChartView);
     mainLayout->addWidget(barChartView);
 
     container->setLayout(mainLayout);
     container->show();
-
 
     QString html = R"(
         <style>
@@ -468,10 +513,80 @@ void MainWindow::updateStatistics()
 }
 
 
+void MainWindow::on_pushButton_microphone_clicked()
+{
+    if (!voiceRecognition) {
+        voiceRecognition = new VoiceRecognition(this);
+
+        connect(voiceRecognition, &VoiceRecognition::textRecognized,
+                this, &MainWindow::onVoiceTextRecognized);
+        connect(voiceRecognition, &VoiceRecognition::error,
+                this, &MainWindow::onVoiceError);
+        connect(voiceRecognition, &VoiceRecognition::recordingStarted,
+                this, &MainWindow::onRecordingStarted);
+        connect(voiceRecognition, &VoiceRecognition::recordingStopped,
+                this, &MainWindow::onRecordingStopped);
+    }
+
+    if (voiceRecognition->isRecording()) {
+        voiceRecognition->stopRecording();
+    } else {
+        voiceRecognition->startRecording();
+    }
+}
+
+void MainWindow::onRecordingStarted()
+{
+    ui->pushButton_microphone->setText("🎤 Arrêter");
+    ui->pushButton_microphone->setStyleSheet("background-color: #f44336; color: white; font-weight: bold;");
+
+    // Check if label exists in UI, otherwise create or skip
+    QLabel* statusLabel = this->findChild<QLabel*>("label_voice_status");
+    if (statusLabel) {
+        statusLabel->setText("🔴 Enregistrement... Parlez maintenant!");
+        statusLabel->setStyleSheet("color: #f44336; font-weight: bold;");
+    }
+}
+
+void MainWindow::onRecordingStopped()
+{
+    ui->pushButton_microphone->setText("🎤 Parler");
+    ui->pushButton_microphone->setStyleSheet("");
+
+    QLabel* statusLabel = this->findChild<QLabel*>("label_voice_status");
+    if (statusLabel) {
+        statusLabel->setText("⏸️ Traitement...");
+        statusLabel->setStyleSheet("color: #ff9800;");
+    }
+}
+
+void MainWindow::onVoiceTextRecognized(const QString &text)
+{
+    QLabel* statusLabel = this->findChild<QLabel*>("label_voice_status");
+    if (statusLabel) {
+        statusLabel->setText("✅ Reconnu: " + text);
+        statusLabel->setStyleSheet("color: #4CAF50; font-weight: bold;");
+    }
+
+    // Remplir le champ de modification avec le texte reconnu
+    ui->lineEdit_5->setText(text);
+
+    qDebug() << "Voix reconnue:" << text;
+}
+
+void MainWindow::onVoiceError(const QString &error)
+{
+    QLabel* statusLabel = this->findChild<QLabel*>("label_voice_status");
+    if (statusLabel) {
+        statusLabel->setText("❌ Erreur: " + error);
+        statusLabel->setStyleSheet("color: #f44336;");
+    }
+
+    QMessageBox::warning(this, "Erreur de reconnaissance vocale", error);
+}
 
 void MainWindow::on_pushButton_email_clicked()
 {
-
     QSqlQuery query;
     query.exec("SELECT COUNT(*) FROM VEHICULE WHERE ETAT = 'bonne etat'");
 
@@ -486,14 +601,12 @@ void MainWindow::on_pushButton_email_clicked()
         return;
     }
 
-
     QString instructorEmail = selectInstructor();
 
     if (instructorEmail.isEmpty()) {
-        return; // L'utilisateur a annulé
+        return;
     }
 
-    // Préparer le contenu de l'email
     QString vehiclesText = getAvailableVehiclesText();
     QString subject = "Véhicules Disponibles - Liste du " +
                       QDateTime::currentDateTime().toString("dd/MM/yyyy");
@@ -505,7 +618,6 @@ void MainWindow::on_pushButton_email_clicked()
     body += "Cordialement,\n";
     body += "Système de Gestion des Véhicules";
 
-    // Afficher une boîte de dialogue de progression
     QProgressDialog progress("Envoi de l'email en cours...", "Annuler", 0, 0, this);
     progress.setWindowModality(Qt::WindowModal);
     progress.setMinimumDuration(0);
@@ -513,7 +625,6 @@ void MainWindow::on_pushButton_email_clicked()
     progress.show();
     QApplication::processEvents();
 
-    // Envoyer l'email
     bool success = emailSender->sendEmail(instructorEmail, "Instructeur", subject, body);
 
     progress.close();
@@ -540,7 +651,7 @@ QString MainWindow::getAvailableVehiclesText()
         QString matricule = query.value(1).toString();
         int km = query.value(2).toInt();
 
-        text += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+        text += "═══════════════════════════════════\n";
         text += "🚗 Véhicule #" + QString::number(count++) + "\n";
         text += "   Marque: " + marque + "\n";
         text += "   Immatricule: " + matricule + "\n";
@@ -548,7 +659,7 @@ QString MainWindow::getAvailableVehiclesText()
         text += "   État: Bonne état\n\n";
     }
 
-    text += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
+    text += "═══════════════════════════════════\n";
 
     return text;
 }
@@ -558,7 +669,6 @@ QStringList MainWindow::getInstructorsList()
     QStringList instructors;
     QSqlQuery query;
 
-    // Simply get all instructors from the MONITEUR table
     if (query.exec("SELECT NOM, PRENOM, MAIL FROM MONITEUR ORDER BY NOM")) {
         while (query.next()) {
             QString nom = query.value(0).toString();
@@ -595,7 +705,6 @@ QString MainWindow::selectInstructor()
                                              &ok);
 
     if (ok && !selected.isEmpty()) {
-        // Extraire l'email entre parenthèses
         int start = selected.indexOf('(');
         int end = selected.indexOf(')');
         if (start != -1 && end != -1) {

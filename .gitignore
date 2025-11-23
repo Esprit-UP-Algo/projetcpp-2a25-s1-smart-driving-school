@@ -1,0 +1,92 @@
+# Qt Creator project files
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+*.moc
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+*.autosave
+
+# Qt Build directories
+build/
+build-*/
+*build-*
+
+# CMake
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+
+# Compiled Object files
+*.o
+*.obj
+*.lo
+*.slo
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.a
+*.lib
+*.lai
+*.la
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Qt specific
+*.qm
+.qmake.cache
+.qmake.stash
+
+# Debug/Release folders
+Debug/
+Release/
+debug/
+release/
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.bak
+*.swp
+*~
+
+# IDE specific
+.vscode/
+.idea/
+*.suo
+*.user
+*.sln.docstates
+
+# Generated Python files (for your voice recognition)
+__pycache__/
+*.pyc
+*.pyo
+temp_voice.wav
+speech_recognizer.py
+
+# Config files with sensitive data (if needed)
+# config.ini
+
+# OS specific
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Ninja build system
+.ninja_deps
+.ninja_log

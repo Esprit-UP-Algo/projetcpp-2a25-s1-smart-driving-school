@@ -7,9 +7,9 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find Qt packages - ADDED Charts and Network here
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Sql PrintSupport Charts Network)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Sql PrintSupport Charts Network)
+# Find Qt packages - ADDED Multimedia for audio recording
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Sql PrintSupport Charts Network Multimedia)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Sql PrintSupport Charts Network Multimedia)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -22,6 +22,8 @@ set(PROJECT_SOURCES
         vehicule.cpp
         emailsender.h
         emailsender.cpp
+        voicerecognition.h
+        voicerecognition.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -41,13 +43,14 @@ else()
     endif()
 endif()
 
-# Link libraries - ADDED Charts and Network here
+# Link libraries - ADDED Multimedia
 target_link_libraries(tttttetetetetet PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::Sql
     Qt${QT_VERSION_MAJOR}::PrintSupport
     Qt${QT_VERSION_MAJOR}::Charts
     Qt${QT_VERSION_MAJOR}::Network
+    Qt${QT_VERSION_MAJOR}::Multimedia
 )
 
 if(${QT_VERSION} VERSION_LESS 6.1.0)
@@ -70,7 +73,6 @@ install(TARGETS tttttetetetetet
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)
-    # CORRECTION: Désactiver le scan QML car on n'utilise pas QML
     set_target_properties(tttttetetetetet PROPERTIES
         QT_QML_MODULE_VERSION 1.0
         QT_QML_MODULE_URI tttttetetetetet

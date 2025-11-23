@@ -5,6 +5,7 @@
 #include <QTableWidgetItem>
 #include "vehicule.h"
 #include "emailsender.h"
+#include "voicerecognition.h"  // NOUVEAU
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -28,19 +29,27 @@ private slots:
     void on_pushButton_8_clicked();
     void on_pushButton_9_clicked();
     void on_pushButton_10_clicked();
-    void on_pushButton_email_clicked();  // NOUVEAU: Bouton email
+    void on_pushButton_email_clicked();
+    void on_pushButton_microphone_clicked();  // NOUVEAU: Bouton microphone
     void on_tableWidget_clicked(const QModelIndex &index);
+
+    // NOUVEAU: Slots pour la reconnaissance vocale
+    void onVoiceTextRecognized(const QString &text);
+    void onVoiceError(const QString &error);
+    void onRecordingStarted();
+    void onRecordingStopped();
 
 private:
     Ui::MainWindow *ui;
     Vehicule Vtmp;
     int selectedId;
-    EmailSender *emailSender;  // NOUVEAU: Gestionnaire d'emails
+    EmailSender *emailSender;
+    VoiceRecognition *voiceRecognition;  // NOUVEAU: Gestionnaire de reconnaissance vocale
 
     void updateStatistics();
     void refreshTable(QSqlQueryModel* model);
 
-    // NOUVEAU: Méthodes email
+    // Méthodes email
     QString getAvailableVehiclesText();
     QStringList getInstructorsList();
     QString selectInstructor();

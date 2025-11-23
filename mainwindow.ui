@@ -138,6 +138,30 @@ QPushButton#pushButton_8:hover, QPushButton#pushButton_email:hover {
         stop:0 #388E3C, stop:1 #2E7D32);
 }
 
+QPushButton#pushButton_10 {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 #FF9800, stop:1 #F57C00);
+    font-size: 15px;
+    padding: 12px;
+}
+
+QPushButton#pushButton_10:hover {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 #F57C00, stop:1 #E65100);
+}
+
+QPushButton#pushButton_microphone {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 #2196F3, stop:1 #1976D2);
+    font-size: 18px;
+    border-radius: 6px;
+}
+
+QPushButton#pushButton_microphone:hover {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+        stop:0 #1976D2, stop:1 #1565C0);
+}
+
 QTableWidget {
     background-color: white;
     border: 2px solid #009688;
@@ -447,7 +471,7 @@ QGroupBox::title {
         <x>20</x>
         <y>410</y>
         <width>350</width>
-        <height>160</height>
+        <height>200</height>
        </rect>
       </property>
       <property name="styleSheet">
@@ -529,21 +553,37 @@ QGroupBox::title {
       <widget class="QLineEdit" name="lineEdit_5">
        <property name="geometry">
         <rect>
-         <x>150</x>
-         <y>64</y>
-         <width>180</width>
-         <height>41</height>
+         <x>20</x>
+         <y>94</y>
+         <width>310</width>
+         <height>35</height>
         </rect>
        </property>
        <property name="placeholderText">
         <string>Nouvelle valeur</string>
        </property>
       </widget>
+      <widget class="QPushButton" name="pushButton_microphone">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>135</y>
+         <width>150</width>
+         <height>35</height>
+        </rect>
+       </property>
+       <property name="toolTip">
+        <string>Cliquez pour parler</string>
+       </property>
+       <property name="text">
+        <string>🎤 Parler</string>
+       </property>
+      </widget>
       <widget class="QPushButton" name="pushButton_10">
        <property name="geometry">
         <rect>
-         <x>100</x>
-         <y>110</y>
+         <x>180</x>
+         <y>135</y>
          <width>150</width>
          <height>35</height>
         </rect>
