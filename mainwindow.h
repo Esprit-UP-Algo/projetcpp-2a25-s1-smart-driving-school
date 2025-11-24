@@ -2,36 +2,68 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QModelIndex>
-#include <QSortFilterProxyModel>
-#include "condidat.h"
+
+#include <QtSql/QSqlQuery>
+#include <QtSql/QSqlError>
+#include <QSqlQueryModel>
+
+#include "chat.h"
+#include "qr/qrcodegen.hpp"
+
+#include <QtCharts/QChartView>
+#include <QtCharts/QPieSeries>
+#include <QtCharts/QChart>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
-class MainWindow : public QMainWindow {
+class MainWindow : public QMainWindow
+{
     Q_OBJECT
+
 public:
-    explicit MainWindow(QWidget *parent = nullptr);
+    MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    QString getClientInfoById(int id) const;
+    QString getTransactionInfoById(int id) const;
+
+    double getTotalIncome() const;
+    double getTotalExpenses() const;
+    double getTotalBalance() const;
+
 private slots:
-    void on_ajouterButton_clicked();           // AJOUT (ID auto BD)
-    void on_modifierButton_clicked();          // MODIFIER (ID dans lineEdit_id_modify)
-    void on_supprimerButton_clicked();         // SUPPRIMER (ID dans lineEdit_id_delete)
-
-
+    void on_addButton_clicked();
+    void on_deleteButton_clicked();
+    void on_btnSearch_clicked();
+    void on_exportButton_2_clicked();
+    void on_tabWidget_currentChanged(int index);
+    void on_UpdateButton_clicked();
+    void onTableCurrentChanged(const QModelIndex &current, const QModelIndex &previous);
+    void on_exportButton_clicked();
+    void on_TRIE_activated(int index);
+    void on_btnGenerateQr_clicked();
+    void on_chatButton_clicked();
 
 private:
     Ui::MainWindow *ui;
-    Condidat tmpCondidat;
+    QSqlQueryModel *modelTransactions = nullptr;
 
-    QSortFilterProxyModel *proxy{nullptr};     // 🔴 proxy pour filtrer toutes colonnes
+    chat *chatWindow;
+    QSqlQueryModel *modelStats = nullptr;
+    QChartView *chartView = nullptr;          // statistics chart
+    QImage generateQrImage(const QString &text, int pixelsPerModule = 8);
+    QString buildDashboardText() const;
 
-    void actualiserTable();                    // recharge le modèle SQL et MAJ proxy
-    bool validateInputs();                     // valide NOM, PRENOM, NUM_TEL, MAIL, CIN
-    void clearFields();                        // nettoie NOM..CIN
+    void loadStatistics();
+    void loadTableData();
+    void detachModel();
+    void clearForm();
+    void initYearFilter();
+    void updateDashboard(int year = 0);   // 0 = all years
+
+    QChartView *chartViewBalance = nullptr;   // NEW: dashboard chart
 };
 
 #endif // MAINWINDOW_H
