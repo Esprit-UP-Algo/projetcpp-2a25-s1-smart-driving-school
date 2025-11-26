@@ -10,6 +10,13 @@
 #include <QPdfWriter>
 #include <QPainter>
 #include <QPageSize>
+
+#include <QSqlQuery>
+#include <QSqlError>
+#include <QVBoxLayout>
+
+
+
 static bool isExactly8Digits(const QString &s) {
     const QString t = s.trimmed();
     if (t.size() != 8) return false;
@@ -74,7 +81,6 @@ MainWindow::MainWindow(QWidget *parent)
             ui->lineEdit_7->setPlaceholderText("Lettres/espaces (' -)");
         }
     };
-    // initialiser + suivre les changements du combo
     setMaskForField(ui->comboBox_4->currentText());
     connect(ui->comboBox_4, &QComboBox::currentTextChanged, this, setMaskForField);
 
@@ -98,10 +104,24 @@ MainWindow::MainWindow(QWidget *parent)
         );
 
     loadTableData();
+    statsChartView = new StatsChartWidget(this);
+    if (auto lay = qobject_cast<QVBoxLayout*>(ui->chartContainer->layout())) {
+        lay->addWidget(statsChartView);
+    } else {
+        auto *v = new QVBoxLayout(ui->chartContainer);
+        v->setContentsMargins(0,0,0,0);
+        v->addWidget(statsChartView);
+    }
+
+    // Combo “Code/Conduite” => recharge
+    connect(ui->comboTypeStats, SIGNAL(currentIndexChanged(int)),
+            this, SLOT(on_comboTypeStats_currentIndexChanged(int)));
+
 
     if (ui->tableViewExams->horizontalHeader())
         ui->tableViewExams->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 }
+
 
 MainWindow::~MainWindow()
 {
@@ -205,12 +225,76 @@ void MainWindow::on_btnSearch_clicked()
 }
 
 
-
 void MainWindow::on_tabWidget_currentChanged(int index)
 {
-    Q_UNUSED(index);
-
+    // Quand on entre sur l’onglet "Statistiques", reload
+    if (ui->tabWidget->tabText(index).contains("Stat", Qt::CaseInsensitive)) {
+        loadStatsTable();
+    }
 }
+
+void MainWindow::on_comboTypeStats_currentIndexChanged(int)
+{
+    loadStatsTable();
+}
+
+void MainWindow::loadStatsTable()
+{
+    if (!statsChartView) return;
+
+    const QString type = ui->comboTypeStats->currentText().trimmed(); // "Code" ou "Conduite"
+
+    // vecteur 12 mois, initialisé à 0
+    QVector<int>   total(12, 0);
+    QVector<int>   succes(12, 0);
+    QVector<double> taux(12, 0.0);
+
+    // Requête par mois de l'année courante
+    QSqlQuery q;
+    q.prepare(R"(
+        SELECT EXTRACT(MONTH FROM DATE_EXAM) AS MOIS,
+               COUNT(*) AS TOTAL,
+               SUM(CASE WHEN UPPER(RESULTAT) IN ('REUSSITE','RÉUSSITE') THEN 1 ELSE 0 END) AS SUCCES
+        FROM EXAMENS
+        WHERE UPPER(TYPE) = UPPER(:type)
+          AND EXTRACT(YEAR FROM DATE_EXAM) = EXTRACT(YEAR FROM SYSDATE)
+        GROUP BY EXTRACT(MONTH FROM DATE_EXAM)
+        ORDER BY MOIS
+    )");
+    q.bindValue(":type", type);
+
+    if (!q.exec()) {
+        // si erreur SQL, on laisse la courbe vide
+        statsChartView->setData(QVector<double>(12, 0.0),
+                                tr("Erreur SQL: %1").arg(q.lastError().text()));
+        return;
+    }
+
+    while (q.next()) {
+        int m  = q.value(0).toInt();   // 1..12
+        int t  = q.value(1).toInt();
+        int s  = q.value(2).toInt();
+        if (m >= 1 && m <= 12) {
+            total[m-1]  = t;
+            succes[m-1] = s;
+        }
+    }
+
+    for (int i=0; i<12; ++i) {
+        if (total[i] > 0)
+            taux[i] = 100.0 * double(succes[i]) / double(total[i]);
+        else
+            taux[i] = 0.0;
+    }
+
+    const int year = QDate::currentDate().year();
+    const QString title = tr("Taux de réussite %1 — %2").arg(type).arg(year);
+
+    statsChartView->setData(taux, title);
+}
+
+
+
 void MainWindow::on_modifyButton_clicked()
 {
     auto *m   = qobject_cast<QSqlQueryModel*>(ui->tableViewExams->model());
@@ -367,13 +451,24 @@ void MainWindow::setRole(Role r) {
 
 void MainWindow::applyRole() {
     const bool isAdmin    = (role_ == Role::Admin);
-    const bool isMoniteur = (role_ == Role::Moniteur);
+    const bool isRH       = (role_ == Role::RH);
 
-    ui->btnCandidat->setVisible(isAdmin);
-    ui->btnFinance->setVisible(isAdmin);
-    ui->btnMoniteur->setVisible(isAdmin || isMoniteur);
-    ui->btnVehicule->setVisible(isAdmin || isMoniteur);
+    const bool isMobExam  = (role_ == Role::MobiliteExamens);
+    const bool isFinance  = (role_ == Role::Finance);
 
+    // Accueil toujours visible (si tu as un bouton Accueil)
+    if (ui->btnAccueil) ui->btnAccueil->setVisible(true);
+
+    // Boutons RH
+    ui->btnCandidat->setVisible(isAdmin || isRH);
+    ui->btnMoniteur->setVisible(isAdmin || isRH);
+
+    // Boutons Mobilité & Examens
+    ui->btnVehicule->setVisible(isAdmin || isMobExam);
+    ui->btnExamens->setVisible(isAdmin || isMobExam);
+
+    // Bouton Finance
+    ui->btnFinance->setVisible(isAdmin || isFinance);
 
 }
 

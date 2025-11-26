@@ -49,13 +49,10 @@ void LoginDialog::on_btnLogin_clicked()
     }
 
     const QString roleStr = q.value(0).toString();
+    selectedRole_ = roleFromDb(roleStr);
 
-    if (roleStr.compare("Admin", Qt::CaseInsensitive) == 0) {
-        selectedRole_ = Role::Admin;
-    } else if (roleStr.compare("Moniteur", Qt::CaseInsensitive) == 0) {
-        selectedRole_ = Role::Moniteur;
-    } else {
-        QMessageBox::warning(this, "Login", "Rôle inconnu dans la base.");
+    if (selectedRole_ == Role::Unknown) {
+        QMessageBox::warning(this, "Login", "Rôle inconnu/non supporté dans la base.");
         return;
     }
 

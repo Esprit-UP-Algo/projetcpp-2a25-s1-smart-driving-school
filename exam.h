@@ -28,6 +28,7 @@ public:
     static bool modifierTexte(const QString &cin, const QDate &oldDate, const QString &col, const QString &val);
     static bool modifierDate(const QString &cin, const QDate &oldDate,const QDate &newDate);
     static QSqlQueryModel* afficherParDate(bool asc);
+    static QSqlQueryModel* statsMensuellesPivot();
 
 private:
     QString type, date, lieu, resultat, cin;

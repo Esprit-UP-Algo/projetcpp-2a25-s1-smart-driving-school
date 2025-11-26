@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    // 1) Connexion DB
+    // Connexion DB
     Connexion c;
     if (!c.ouvrirConnexion()) {
         QMessageBox::critical(

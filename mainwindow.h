@@ -4,8 +4,7 @@
 #include <QSqlQueryModel>
 #include "role.h"
 #include <QMainWindow>
-
-
+#include "statschartwidget.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -28,8 +27,7 @@ private slots:
     void on_triButton_clicked();
     void on_exportButton_clicked();
     void on_tabWidget_currentChanged(int index);
-
-
+    void on_comboTypeStats_currentIndexChanged(int);
 private:
     void applyRole();
 
@@ -39,6 +37,8 @@ private:
     void clearForm();
     void detachModel();
     Role role_ = Role::Admin;
+    void loadStatsTable();
+    StatsChartWidget* statsChartView = nullptr;
 };
 
 
