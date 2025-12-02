@@ -4,8 +4,8 @@ Connexion::Connexion()
 {
     db = QSqlDatabase::addDatabase("QODBC");
     db.setDatabaseName("source_projet2A");
-    db.setUserName("malik");
-    db.setPassword("14544286");
+    db.setUserName("system");
+    db.setPassword("yusf1234");
 
 }
 

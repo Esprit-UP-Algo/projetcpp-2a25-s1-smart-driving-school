@@ -24,7 +24,7 @@
 #include <QInputDialog>
 #include <QProgressDialog>
 
-MainWindow::MainWindow(QWidget *parent)
+MainWindowV::MainWindowV(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , selectedId(-1)
@@ -53,15 +53,15 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
     refreshTable(Vtmp.afficher());
-    connect(ui->tabWidget, &QTabWidget::currentChanged, this, &MainWindow::on_tabWidget_currentChanged);
+    connect(ui->tabWidget, &QTabWidget::currentChanged, this, &MainWindowV::on_tabWidget_currentChanged);
 }
 
-MainWindow::~MainWindow()
+MainWindowV::~MainWindowV()
 {
     delete ui;
 }
 
-void MainWindow::refreshTable(QSqlQueryModel* model)
+void MainWindowV::refreshTable(QSqlQueryModel* model)
 {
     ui->tableWidget->setRowCount(0);
     ui->tableWidget->setColumnCount(5);
@@ -83,7 +83,7 @@ void MainWindow::refreshTable(QSqlQueryModel* model)
     delete model;
 }
 
-void MainWindow::on_pushButton_clicked()
+void MainWindowV::on_pushButton_clicked()
 {
     QString marque = ui->lineEdit->text();
     QString matricule = ui->lineEdit_2->text();
@@ -142,7 +142,7 @@ void MainWindow::on_pushButton_clicked()
     }
 }
 
-void MainWindow::on_pushButton_2_clicked()
+void MainWindowV::on_pushButton_2_clicked()
 {
     QString terme = ui->lineEdit_3->text();
 
@@ -153,13 +153,13 @@ void MainWindow::on_pushButton_2_clicked()
     }
 }
 
-void MainWindow::on_pushButton_4_clicked()
+void MainWindowV::on_pushButton_4_clicked()
 {
     refreshTable(Vtmp.afficher());
     ui->lineEdit_3->clear();
 }
 
-void MainWindow::on_pushButton_10_clicked()
+void MainWindowV::on_pushButton_10_clicked()
 {
     if (selectedId == -1) {
         QMessageBox::warning(this, "Erreur", "Sélectionnez un véhicule dans le tableau!");
@@ -203,7 +203,7 @@ void MainWindow::on_pushButton_10_clicked()
     }
 }
 
-void MainWindow::on_pushButton_6_clicked()
+void MainWindowV::on_pushButton_6_clicked()
 {
     if (selectedId == -1) {
         QMessageBox::warning(this, "Erreur", "Sélectionnez un véhicule dans le tableau!");
@@ -228,7 +228,7 @@ void MainWindow::on_pushButton_6_clicked()
     }
 }
 
-void MainWindow::on_pushButton_5_clicked()
+void MainWindowV::on_pushButton_5_clicked()
 {
     QMessageBox::StandardButton reply;
     reply = QMessageBox::question(this, "Confirmation",
@@ -246,7 +246,7 @@ void MainWindow::on_pushButton_5_clicked()
     }
 }
 
-void MainWindow::on_pushButton_8_clicked()
+void MainWindowV::on_pushButton_8_clicked()
 {
     // First check if there are any broken vehicles
     QSqlQuery checkQuery;
@@ -361,7 +361,7 @@ void MainWindow::on_pushButton_8_clicked()
                                                                   "Emplacement : " + fileName);
 }
 
-void MainWindow::on_pushButton_9_clicked()
+void MainWindowV::on_pushButton_9_clicked()
 {
     QString critere = ui->comboBox_3->currentText();
     QString critereSQL;
@@ -375,20 +375,20 @@ void MainWindow::on_pushButton_9_clicked()
     refreshTable(Vtmp.trier(critereSQL));
 }
 
-void MainWindow::on_tableWidget_clicked(const QModelIndex &index)
+void MainWindowV::on_tableWidget_clicked(const QModelIndex &index)
 {
     selectedId = ui->tableWidget->item(index.row(), 0)->text().toInt();
     qDebug() << "ID sélectionné:" << selectedId;
 }
 
-void MainWindow::on_tabWidget_currentChanged(int index)
+void MainWindowV::on_tabWidget_currentChanged(int index)
 {
     if (index == 1) {
         updateStatistics();
     }
 }
 
-void MainWindow::updateStatistics()
+void MainWindowV::updateStatistics()
 {
     QSqlQuery query;
 
@@ -543,19 +543,19 @@ void MainWindow::updateStatistics()
 }
 
 
-void MainWindow::on_pushButton_microphone_clicked()
+void MainWindowV::on_pushButton_microphone_clicked()
 {
     if (!voiceRecognition) {
         voiceRecognition = new VoiceRecognition(this);
 
         connect(voiceRecognition, &VoiceRecognition::textRecognized,
-                this, &MainWindow::onVoiceTextRecognized);
+                this, &MainWindowV::onVoiceTextRecognized);
         connect(voiceRecognition, &VoiceRecognition::error,
-                this, &MainWindow::onVoiceError);
+                this, &MainWindowV::onVoiceError);
         connect(voiceRecognition, &VoiceRecognition::recordingStarted,
-                this, &MainWindow::onRecordingStarted);
+                this, &MainWindowV::onRecordingStarted);
         connect(voiceRecognition, &VoiceRecognition::recordingStopped,
-                this, &MainWindow::onRecordingStopped);
+                this, &MainWindowV::onRecordingStopped);
     }
 
     if (voiceRecognition->isRecording()) {
@@ -565,7 +565,7 @@ void MainWindow::on_pushButton_microphone_clicked()
     }
 }
 
-void MainWindow::onRecordingStarted()
+void MainWindowV::onRecordingStarted()
 {
     ui->pushButton_microphone->setText("🎤 Arrêter");
     ui->pushButton_microphone->setStyleSheet("background-color: #f44336; color: white; font-weight: bold;");
@@ -578,7 +578,7 @@ void MainWindow::onRecordingStarted()
     }
 }
 
-void MainWindow::onRecordingStopped()
+void MainWindowV::onRecordingStopped()
 {
     ui->pushButton_microphone->setText("🎤 Parler");
     ui->pushButton_microphone->setStyleSheet("");
@@ -590,7 +590,7 @@ void MainWindow::onRecordingStopped()
     }
 }
 
-void MainWindow::onVoiceTextRecognized(const QString &text)
+void MainWindowV::onVoiceTextRecognized(const QString &text)
 {
     QLabel* statusLabel = this->findChild<QLabel*>("label_voice_status");
     if (statusLabel) {
@@ -604,7 +604,7 @@ void MainWindow::onVoiceTextRecognized(const QString &text)
     qDebug() << "Voix reconnue:" << text;
 }
 
-void MainWindow::onVoiceError(const QString &error)
+void MainWindowV::onVoiceError(const QString &error)
 {
     QLabel* statusLabel = this->findChild<QLabel*>("label_voice_status");
     if (statusLabel) {
@@ -615,7 +615,7 @@ void MainWindow::onVoiceError(const QString &error)
     QMessageBox::warning(this, "Erreur de reconnaissance vocale", error);
 }
 
-void MainWindow::on_pushButton_email_clicked()
+void MainWindowV::on_pushButton_email_clicked()
 {
     QSqlQuery query;
     query.exec("SELECT COUNT(*) FROM VEHICULE WHERE ETAT = 'bonne etat'");
@@ -668,7 +668,7 @@ void MainWindow::on_pushButton_email_clicked()
     }
 }
 
-QString MainWindow::getAvailableVehiclesText()
+QString MainWindowV::getAvailableVehiclesText()
 {
     QString text;
     QSqlQuery query;
@@ -694,7 +694,7 @@ QString MainWindow::getAvailableVehiclesText()
     return text;
 }
 
-QStringList MainWindow::getInstructorsList()
+QStringList MainWindowV::getInstructorsList()
 {
     QStringList instructors;
     QSqlQuery query;
@@ -714,7 +714,7 @@ QStringList MainWindow::getInstructorsList()
     return instructors;
 }
 
-QString MainWindow::selectInstructor()
+QString MainWindowV::selectInstructor()
 {
     QStringList instructors = getInstructorsList();
 

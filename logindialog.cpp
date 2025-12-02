@@ -28,11 +28,11 @@ void LoginDialog::on_btnLogin_clicked()
     }
 
     QSqlQuery q;
-    q.prepare(R"(
-        SELECT ROLE
-        FROM MALIK.USERS
-        WHERE LOWER(USERNAME) = LOWER(:u) AND PASSWORD = :p
-    )");
+q.prepare(R"(
+    SELECT ROLE
+    FROM USERS
+    WHERE LOWER(USERNAME) = LOWER(:u) AND PASSWORD = :p
+)");
 
 
     q.bindValue(":u", user);

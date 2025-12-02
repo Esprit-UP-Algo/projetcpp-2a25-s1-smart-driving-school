@@ -7,23 +7,42 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find Qt packages - ADDED Multimedia for audio recording
+# Find Qt packages
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Sql PrintSupport Charts Network Multimedia)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Sql PrintSupport Charts Network Multimedia)
 
 set(PROJECT_SOURCES
-    mainV.cpp
+    # Main file (merged integration)
+    main.cpp
+
+    # Vehicule branch files
     mainwindowV.cpp
     mainwindowV.h
-        mainwindowV.ui
-        connection.h
-        connection.cpp
-        vehicule.h
-        vehicule.cpp
-        emailsender.h
-        emailsender.cpp
-        voicerecognition.h
-        voicerecognition.cpp
+    mainwindowV.ui
+    vehicule.h
+    vehicule.cpp
+    emailsender.h
+    emailsender.cpp
+    voicerecognition.h
+    voicerecognition.cpp
+
+    # Examens branch files - MAIN UI
+    mainwindow.cpp
+    mainwindow.h
+    mainwindow.ui
+    exam.cpp
+    exam.h
+    role.h
+    logindialog.cpp
+    logindialog.h
+    logindialog.ui
+    connexion.cpp
+    connexion.h
+    connexion.ui
+
+    # Connection files (shared)
+    connection.h
+    connection.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -43,7 +62,7 @@ else()
     endif()
 endif()
 
-# Link libraries - ADDED Multimedia
+# Link libraries
 target_link_libraries(tttttetetetetet PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::Sql

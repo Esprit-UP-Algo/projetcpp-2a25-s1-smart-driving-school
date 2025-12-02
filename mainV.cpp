@@ -14,26 +14,9 @@ int main(int argc, char *argv[])
     } else{
         qDebug() << "Connexion établie avec succès!";
 
-        MainWindow w;
+        MainWindowV w;  // Changed from MainWindow to MainWindowV
         w.show();
 
         return a.exec();
     }
 }
-
-
-
-
-
-   /* if (test) {
-        qDebug() << "Connexion établie avec succès!";
-
-        MainWindow w;
-        w.show();
-
-        return a.exec();
-    } else {
-        QMessageBox::critical("Impossible de se connecter");
-        return 0;
-    }*/
-
