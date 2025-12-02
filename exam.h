@@ -21,7 +21,7 @@ public:
 
     // CRUD
     bool ajouter() const;                                 // INSERT
-    static bool supprimer(const QString &cin, const QString &date_ddMMyyyy); // DELETE par (CINC, DATE_EXAM)
+    static bool supprimer(const QString &cin, const QString &date_ddMMyyyy); // DELETE par (CINC, EXAM_DATE)
 
     static QSqlQueryModel* afficherTous();
     static QSqlQueryModel* afficherParCin(const QString &cin);

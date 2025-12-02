@@ -1,7 +1,11 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QCalendarWidget>
+#include <QListWidget>
+#include <QSqlQuery>
 #include <QSqlQueryModel>
+#include <QTextCharFormat>
 #include "role.h"
 #include <QMainWindow>
 #include "statschartwidget.h"
@@ -28,6 +32,13 @@ private slots:
     void on_exportButton_clicked();
     void on_tabWidget_currentChanged(int index);
     void on_comboTypeStats_currentIndexChanged(int);
+
+   // --- Calendrier ---
+    void refreshCalendarMarks();
+    void on_calendar_selectionChanged();
+    void on_btnAddPlan_clicked();
+    void on_btnDelPlan_clicked();
+    void on_btnRefreshPlan_clicked();
 private:
     void applyRole();
 
@@ -39,6 +50,10 @@ private:
     Role role_ = Role::Admin;
     void loadStatsTable();
     StatsChartWidget* statsChartView = nullptr;
+
+    void checkPlanningAccess();
+    void loadDayList(const QDate& d);
+    void clearCalendarMarks();
 };
 
 

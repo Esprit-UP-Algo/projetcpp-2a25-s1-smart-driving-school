@@ -456,11 +456,11 @@ QHeaderView::section {
           <enum>QTabWidget::TabShape::Rounded</enum>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>2</number>
          </property>
          <widget class="QWidget" name="tab_5">
           <attribute name="title">
-           <string>Examens</string>
+           <string> Examens </string>
           </attribute>
           <widget class="QGroupBox" name="groupBox_modify">
            <property name="geometry">
@@ -994,6 +994,9 @@ QPushButton:hover {
              <height>341</height>
             </rect>
            </property>
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
            <property name="title">
             <string>Ajout d'examens</string>
            </property>
@@ -1177,7 +1180,7 @@ QDateEdit ::drop-down {
             </property>
             <property name="dateTime">
              <datetime>
-              <hour>22</hour>
+              <hour>20</hour>
               <minute>0</minute>
               <second>0</second>
               <year>2024</year>
@@ -1380,7 +1383,7 @@ background-color: rgb(41, 127, 110);}</string>
             <property name="geometry">
              <rect>
               <x>30</x>
-              <y>437</y>
+              <y>480</y>
               <width>181</width>
               <height>41</height>
              </rect>
@@ -1420,13 +1423,506 @@ QComboBox::drop-down {
            <widget class="QWidget" name="chartContainer" native="true">
             <property name="geometry">
              <rect>
-              <x>30</x>
-              <y>30</y>
-              <width>981</width>
-              <height>391</height>
+              <x>10</x>
+              <y>20</y>
+              <width>1031</width>
+              <height>441</height>
              </rect>
             </property>
            </widget>
+          </widget>
+         </widget>
+         <widget class="QWidget" name="pageCalendrier">
+          <attribute name="title">
+           <string> Calendrier  </string>
+          </attribute>
+          <widget class="QCalendarWidget" name="calendar">
+           <property name="geometry">
+            <rect>
+             <x>10</x>
+             <y>10</y>
+             <width>631</width>
+             <height>351</height>
+            </rect>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">/* ===== QCalendarWidget – thème NovaDrive (vert) ===== */
+
+/* Fond global */
+QCalendarWidget {
+    background-color: white;
+    border: 1px solid rgb(41,127,110);
+    border-radius: 6px;
+    padding: 4px;
+    color: rgb(41,127,110);
+    font-size: 14px;
+}
+
+/* Barre de navigation (mois/année + flèches) */
+QCalendarWidget QWidget#qt_calendar_navigationbar {
+    background-color: rgb(41,127,110);
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    padding: 4px;
+}
+
+/* Boutons de navigation (flèches) */
+QCalendarWidget QToolButton {
+    background: transparent;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+QCalendarWidget QToolButton:hover {
+    background: rgba(255,255,255,0.15);
+}
+
+/* Mois / Année (spinbox / menu) */
+QCalendarWidget QSpinBox,
+QCalendarWidget QComboBox {
+    background: white;
+    color: rgb(41,127,110);
+    border: 1px solid rgba(255,255,255,0.0);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-weight: 600;
+}
+
+/* En-têtes des jours (L, M, M, J, V, S, D) */
+QCalendarWidget QTableView QHeaderView::section {
+    background-color: rgb(41,127,110);
+    color: white;
+    border: none;
+    padding: 4px;
+    font-weight: 600;
+}
+
+/* Cellules des jours */
+QCalendarWidget QAbstractItemView {
+    outline: none;
+    selection-background-color: rgba(41,127,110,0.12);
+    selection-color: rgb(41,127,110);
+    gridline-color: rgba(41,127,110,0.25);
+    background: white;
+}
+
+/* Jour sélectionné */
+QCalendarWidget QAbstractItemView:enabled:item:selected {
+    background: rgba(41,127,110,0.13);
+    color: rgb(41,127,110);
+}
+
+/* Aujourd'hui (si non sélectionné) */
+QCalendarWidget QWidget#qt_calendar_calendarview::item:hover {
+    background: rgba(41,127,110,0.08);
+}
+
+/* Jours du mois précédent/suivant (grisés) */
+QCalendarWidget QAbstractItemView:enabled:item {
+    color: rgb(41,127,110);
+}
+QCalendarWidget QAbstractItemView:enabled:item:!active {
+    color: rgba(41,127,110,0.8);
+}
+QCalendarWidget QAbstractItemView:enabled:item:alternate {
+    color: rgba(41,127,110,0.55);
+}
+</string>
+           </property>
+          </widget>
+          <widget class="QListWidget" name="listDay">
+           <property name="geometry">
+            <rect>
+             <x>700</x>
+             <y>20</y>
+             <width>301</width>
+             <height>341</height>
+            </rect>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">/* Conteneur */
+QListWidget {
+    background: #ffffff;
+    color: rgb(41,127,110);                 /* texte vert */
+    border: 1px solid rgb(41,127,110);
+    border-radius: 8px;
+    padding: 4px;
+    outline: none;                          /* pas de halo bleu moche */
+}
+
+/* Lignes */
+QListWidget::item {
+    padding: 8px 10px;
+    margin: 2px 6px;                        /* espace entre les “pills” */
+    border-radius: 6px;
+}
+
+/* Survol */
+QListWidget::item:hover {
+    background: rgba(41,127,110, 0.10);
+}
+
+/* Sélection */
+QListWidget::item:selected {
+    background: rgb(41,127,110);
+    color: #ffffff;
+}
+
+/* Sélection quand la liste n’a pas le focus (plus doux) */
+QListWidget::item:selected:!active {
+    background: rgba(41,127,110, 0.80);
+}
+
+/* Alternance (si activée côté code) */
+QListWidget::item:alternate {
+    background: #fafafa;
+}
+
+/* Scrollbar verticale (sobre) */
+QScrollBar:vertical {
+    background: transparent;
+    width: 12px;
+    margin: 4px 0;
+}
+QScrollBar::handle:vertical {
+    background: rgba(41,127,110, 0.45);
+    min-height: 24px;
+    border-radius: 6px;
+}
+QScrollBar::handle:vertical:hover {
+    background: rgba(41,127,110, 0.65);
+}
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical {
+    height: 0px;                            /* pas de boutons +/- */
+}
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical {
+    background: transparent;
+}
+</string>
+           </property>
+          </widget>
+          <widget class="QDateEdit" name="datePlan">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>380</y>
+             <width>110</width>
+             <height>29</height>
+            </rect>
+           </property>
+          </widget>
+          <widget class="QTimeEdit" name="timePlan">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>410</y>
+             <width>118</width>
+             <height>29</height>
+            </rect>
+           </property>
+          </widget>
+          <widget class="QGroupBox" name="groupBox">
+           <property name="geometry">
+            <rect>
+             <x>200</x>
+             <y>360</y>
+             <width>651</width>
+             <height>201</height>
+            </rect>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">QGroupBox {
+    background-color:rgb(227, 245, 235);
+    border: 2px solid #3c7a6d;
+    border-radius: 10px;
+    margin-top: 10px;
+    font-weight: bold;
+    padding: 10px;
+}</string>
+           </property>
+           <property name="title">
+            <string>GroupBox</string>
+           </property>
+           <widget class="QComboBox" name="comboTypePlan">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>20</y>
+              <width>171</width>
+              <height>31</height>
+             </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QComboBox {
+    background-color: white;                  
+    color: black;                            
+    border: 1px solid rgb(41,127,110);     
+    border-radius: 6px;                    
+    padding: 4px 8px;             
+    font-size: 14px;
+}
+
+QComboBox:focus {
+    border: 2px solid rgb(41,127,110);       
+    background-color: rgb(250, 250, 250);    
+}
+
+QComboBox::drop-down {
+    border: none;                            
+    width: 24px;
+}
+</string>
+            </property>
+            <item>
+             <property name="text">
+              <string>Code</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Conduite</string>
+             </property>
+            </item>
+           </widget>
+           <widget class="QLineEdit" name="editPlanNote">
+            <property name="geometry">
+             <rect>
+              <x>160</x>
+              <y>150</y>
+              <width>131</width>
+              <height>31</height>
+             </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QLineEdit {
+    background-color: white;   /* fond blanc */
+    color: black;              /* texte noir */
+    border: 1px solid rgb(41,127,110);  /* contour vert */
+    border-radius: 6px;        /* coins arrondis */
+    padding: 4px 8px;          /* marges internes */
+    font-size: 14px;
+}
+
+QLineEdit:focus {
+    border: 2px solid rgb(41,127,110); /* contour plus épais quand actif */
+    background-color: rgb(250, 250, 250); /* très léger gris pour focus */
+}
+</string>
+            </property>
+           </widget>
+           <widget class="QLineEdit" name="editPlanCin">
+            <property name="geometry">
+             <rect>
+              <x>160</x>
+              <y>70</y>
+              <width>131</width>
+              <height>31</height>
+             </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QLineEdit {
+    background-color: white;   /* fond blanc */
+    color: black;              /* texte noir */
+    border: 1px solid rgb(41,127,110);  /* contour vert */
+    border-radius: 6px;        /* coins arrondis */
+    padding: 4px 8px;          /* marges internes */
+    font-size: 14px;
+}
+
+QLineEdit:focus {
+    border: 2px solid rgb(41,127,110); /* contour plus épais quand actif */
+    background-color: rgb(250, 250, 250); /* très léger gris pour focus */
+}
+</string>
+            </property>
+           </widget>
+           <widget class="QLineEdit" name="editLieuPlan">
+            <property name="geometry">
+             <rect>
+              <x>160</x>
+              <y>110</y>
+              <width>131</width>
+              <height>31</height>
+             </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QLineEdit {
+    background-color: white;   /* fond blanc */
+    color: black;              /* texte noir */
+    border: 1px solid rgb(41,127,110);  /* contour vert */
+    border-radius: 6px;        /* coins arrondis */
+    padding: 4px 8px;          /* marges internes */
+    font-size: 14px;
+}
+
+QLineEdit:focus {
+    border: 2px solid rgb(41,127,110); /* contour plus épais quand actif */
+    background-color: rgb(250, 250, 250); /* très léger gris pour focus */
+}
+</string>
+            </property>
+           </widget>
+           <widget class="QPushButton" name="btnAddPlan">
+            <property name="geometry">
+             <rect>
+              <x>490</x>
+              <y>30</y>
+              <width>131</width>
+              <height>41</height>
+             </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QPushButton {
+    background-color: rgb(41, 127, 110); /* vert par défaut */
+    color: white; /* texte blanc */
+    border: none;
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: rgb(209, 209, 209); /* gris clair en hover */
+    color: rgb(41, 127, 110); /* texte vert */
+}
+</string>
+            </property>
+            <property name="text">
+             <string>Ajouter</string>
+            </property>
+           </widget>
+           <widget class="QPushButton" name="btnDelPlan">
+            <property name="geometry">
+             <rect>
+              <x>490</x>
+              <y>80</y>
+              <width>131</width>
+              <height>41</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string>Supprimer</string>
+            </property>
+           </widget>
+           <widget class="QPushButton" name="btnRefreshPlan">
+            <property name="geometry">
+             <rect>
+              <x>490</x>
+              <y>130</y>
+              <width>131</width>
+              <height>41</height>
+             </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QPushButton {
+    background-color: rgb(41, 127, 110); /* vert par défaut */
+    color: white; /* texte blanc */
+    border: none;
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    background-color: rgb(209, 209, 209); /* gris clair en hover */
+    color: rgb(41, 127, 110); /* texte vert */
+}
+</string>
+            </property>
+            <property name="text">
+             <string>Refresh</string>
+            </property>
+           </widget>
+           <widget class="QLabel" name="leType_5">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>70</y>
+              <width>161</width>
+              <height>31</height>
+             </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QLabel {
+    /* normal state */
+	background-color:rgb(227, 245, 235);
+    color: rgb(41, 127, 110);
+    border: none;
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-size: 18px;
+    font-weight: bold;
+}</string>
+            </property>
+            <property name="text">
+             <string>CIN condidat:</string>
+            </property>
+           </widget>
+           <widget class="QLabel" name="deDate_3">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>149</y>
+              <width>151</width>
+              <height>31</height>
+             </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QLabel {
+    /* normal state */
+	background-color:rgb(227, 245, 235);
+    color: rgb(41, 127, 110);
+    border: none;
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-size: 18px;
+    font-weight: bold;
+}</string>
+            </property>
+            <property name="text">
+             <string>Note :</string>
+            </property>
+           </widget>
+           <widget class="QLabel" name="leLieu_3">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>109</y>
+              <width>151</width>
+              <height>31</height>
+             </rect>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QLabel {
+    /* normal state */
+	background-color:rgb(227, 245, 235);
+    color: rgb(41, 127, 110);
+    border: none;
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-size: 18px;
+    font-weight: bold;
+}</string>
+            </property>
+            <property name="text">
+             <string>Lieu :</string>
+            </property>
+           </widget>
+           <zorder>comboTypePlan</zorder>
+           <zorder>btnAddPlan</zorder>
+           <zorder>btnDelPlan</zorder>
+           <zorder>btnRefreshPlan</zorder>
+           <zorder>leType_5</zorder>
+           <zorder>editPlanCin</zorder>
+           <zorder>deDate_3</zorder>
+           <zorder>editPlanNote</zorder>
+           <zorder>leLieu_3</zorder>
+           <zorder>editLieuPlan</zorder>
           </widget>
          </widget>
         </widget>
@@ -1442,7 +1938,7 @@ QComboBox::drop-down {
      <x>0</x>
      <y>0</y>
      <width>1356</width>
-     <height>25</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
