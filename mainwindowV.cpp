@@ -1,5 +1,5 @@
-#include "mainwindow.h"
-#include "ui_mainwindow.h"
+#include "mainwindowV.h"
+#include "ui_mainwindowV.h"
 #include "connection.h"
 #include <QMessageBox>
 #include <QSqlQuery>
@@ -409,6 +409,7 @@ void MainWindow::updateStatistics()
     query.exec("SELECT AVG(KILOMETRAGE) FROM VEHICULE");
     if (query.next()) avgKm = query.value(0).toDouble();
 
+    // Delete old stats widget if exists
     QWidget* statsWidget = ui->tab_2->findChild<QWidget*>("statsContainer");
     if (statsWidget) {
         delete statsWidget;
@@ -421,22 +422,41 @@ void MainWindow::updateStatistics()
     QVBoxLayout* mainLayout = new QVBoxLayout(container);
     mainLayout->setSpacing(20);
 
+
     QPieSeries *pieSeries = new QPieSeries();
     pieSeries->append("Bonne état", goodCondition);
     pieSeries->append("En panne", brokenDown);
+
+    double goodPercentage = totalVehicles > 0 ? (goodCondition * 100.0 / totalVehicles) : 0;
+    double brokenPercentage = totalVehicles > 0 ? (brokenDown * 100.0 / totalVehicles) : 0;
 
     QPieSlice *goodSlice = pieSeries->slices().at(0);
     goodSlice->setBrush(QColor("#4CAF50"));
     goodSlice->setLabelVisible(true);
     goodSlice->setLabelColor(Qt::black);
     goodSlice->setLabelPosition(QPieSlice::LabelOutside);
+    goodSlice->setLabel(QString("Bonne état: %1 (%2%)")
+                            .arg(goodCondition)
+                            .arg(goodPercentage, 0, 'f', 1));
+
+
+    QFont labelFont;
+    labelFont.setPointSize(11);
+    labelFont.setBold(true);
+    goodSlice->setLabelFont(labelFont);
+
 
     QPieSlice *brokenSlice = pieSeries->slices().at(1);
     brokenSlice->setBrush(QColor("#F44336"));
     brokenSlice->setLabelVisible(true);
     brokenSlice->setLabelColor(Qt::black);
     brokenSlice->setLabelPosition(QPieSlice::LabelOutside);
+    brokenSlice->setLabel(QString("En panne: %1 (%2%)")
+                              .arg(brokenDown)
+                              .arg(brokenPercentage, 0, 'f', 1));
+    brokenSlice->setLabelFont(labelFont);
 
+    // Create chart
     QChart *pieChart = new QChart();
     pieChart->addSeries(pieSeries);
     pieChart->setTitle("📊 État des Véhicules");
@@ -447,6 +467,11 @@ void MainWindow::updateStatistics()
     titleFont.setPointSize(14);
     titleFont.setBold(true);
     pieChart->setTitleFont(titleFont);
+
+    // Show legend at the bottom
+    pieChart->legend()->setVisible(true);
+    pieChart->legend()->setAlignment(Qt::AlignBottom);
+    pieChart->legend()->setFont(labelFont);
 
     QChartView *pieChartView = new QChartView(pieChart);
     pieChartView->setRenderHint(QPainter::Antialiasing);
@@ -485,23 +510,28 @@ void MainWindow::updateStatistics()
     barChartView->setRenderHint(QPainter::Antialiasing);
     barChartView->setMinimumHeight(250);
 
+
     mainLayout->addWidget(pieChartView);
     mainLayout->addWidget(barChartView);
 
     container->setLayout(mainLayout);
     container->show();
 
+
     QString html = R"(
         <style>
             .title { color:#1E88E5; font-size:18px; font-weight:700; margin-bottom:10px; }
             .info { font-size:14px; color:#455A64; line-height: 1.8; }
+            .percentage { color:#009688; font-weight:bold; font-size:15px; }
         </style>
         <div>
             <div class='title'>📊 Résumé des Statistiques</div>
             <div class='info'>
                 <b>Total:</b> )" + QString::number(totalVehicles) + R"( véhicules<br>
-                <b>En bon état:</b> )" + QString::number(goodCondition) + R"(<br>
-                <b>En panne:</b> )" + QString::number(brokenDown) + R"(<br>
+                <b>En bon état:</b> )" + QString::number(goodCondition) +
+                   R"( <span class='percentage'>()" + QString::number(goodPercentage, 'f', 1) + R"(%)</span><br>
+                <b>En panne:</b> )" + QString::number(brokenDown) +
+                   R"( <span class='percentage'>()" + QString::number(brokenPercentage, 'f', 1) + R"(%)</span><br>
                 <b>Kilométrage moyen:</b> )" + QString::number(avgKm, 'f', 0) + R"( km
             </div>
         </div>

@@ -12,10 +12,10 @@ find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Sql PrintSupport Chart
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Sql PrintSupport Charts Network Multimedia)
 
 set(PROJECT_SOURCES
-        main.cpp
-        mainwindow.cpp
-        mainwindow.h
-        mainwindow.ui
+    mainV.cpp
+    mainwindowV.cpp
+    mainwindowV.h
+        mainwindowV.ui
         connection.h
         connection.cpp
         vehicule.h

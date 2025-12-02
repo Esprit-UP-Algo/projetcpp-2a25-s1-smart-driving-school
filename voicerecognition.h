@@ -30,7 +30,7 @@ private slots:
 
 private:
     void setupAudio();
-    void listAudioDevices();  // ADDED - This was missing!
+    void listAudioDevices();
     QByteArray convertToWav(const QByteArray &rawAudio, int sampleRate);
     void processWithPython(const QString &wavFilePath);
     void createPythonScript(const QString &scriptPath);

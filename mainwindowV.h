@@ -1,5 +1,5 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef MAINWINDOWV_H
+#define MAINWINDOWV_H
 
 #include <QMainWindow>
 #include <QTableWidgetItem>
@@ -55,4 +55,4 @@ private:
     QString selectInstructor();
 };
 
-#endif // MAINWINDOW_H
+#endif // MAINWINDOWV_H

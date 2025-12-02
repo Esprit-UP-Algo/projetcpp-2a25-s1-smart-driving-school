@@ -19,10 +19,6 @@ VoiceRecognition::VoiceRecognition(QObject *parent)
 {
     connect(m_recordingTimer, &QTimer::timeout, this, &VoiceRecognition::stopRecording);
     m_recordingTimer->setSingleShot(true);
-
-    // Print available audio devices for debugging
-    listAudioDevices();
-
     setupAudio();
 }
 
@@ -37,30 +33,6 @@ VoiceRecognition::~VoiceRecognition()
     }
 }
 
-void VoiceRecognition::listAudioDevices()
-{
-    qDebug() << "=== PÉRIPHÉRIQUES AUDIO DISPONIBLES ===";
-
-    QList<QAudioDevice> devices = QMediaDevices::audioInputs();
-
-    if (devices.isEmpty()) {
-        qDebug() << "❌ AUCUN MICROPHONE DÉTECTÉ!";
-        return;
-    }
-
-    for (int i = 0; i < devices.size(); i++) {
-        const QAudioDevice &device = devices.at(i);
-        qDebug() << "Microphone" << i << ":";
-        qDebug() << "  - Nom:" << device.description();
-        qDebug() << "  - ID:" << device.id();
-        qDebug() << "  - Défaut:" << (device == QMediaDevices::defaultAudioInput() ? "OUI" : "Non");
-    }
-
-    QAudioDevice defaultDevice = QMediaDevices::defaultAudioInput();
-    qDebug() << "\n🎤 Microphone par défaut:" << defaultDevice.description();
-    qDebug() << "======================================\n";
-}
-
 void VoiceRecognition::setupAudio()
 {
     QAudioFormat format;
@@ -71,7 +43,6 @@ void VoiceRecognition::setupAudio()
     QAudioDevice info = QMediaDevices::defaultAudioInput();
 
     if (info.isNull()) {
-        qWarning() << "❌ Aucun périphérique audio d'entrée trouvé!";
         QMessageBox::critical(nullptr, "Erreur Microphone",
                               "Aucun microphone détecté!\n\n"
                               "Vérifiez que votre microphone est:\n"
@@ -81,22 +52,15 @@ void VoiceRecognition::setupAudio()
         return;
     }
 
-    qDebug() << "✅ Microphone sélectionné:" << info.description();
-
     if (!info.isFormatSupported(format)) {
-        qWarning() << "⚠️ Format 16000Hz non supporté, utilisation du format préféré";
         format = info.preferredFormat();
-        qDebug() << "   Format utilisé:" << format.sampleRate() << "Hz,"
-                 << format.channelCount() << "canaux,"
-                 << format.sampleFormat();
     }
 
     m_audioSource = new QAudioSource(info, format, this);
     m_sampleRate = format.sampleRate();
 
-    // Set a larger buffer and lower volume (more sensitive)
     m_audioSource->setBufferSize(65536);
-    m_audioSource->setVolume(1.0);  // Maximum volume
+    m_audioSource->setVolume(1.0);
 
     connect(m_audioSource, &QAudioSource::stateChanged,
             this, &VoiceRecognition::handleStateChanged);
@@ -105,12 +69,11 @@ void VoiceRecognition::setupAudio()
 void VoiceRecognition::startRecording()
 {
     if (m_isRecording) {
-        qDebug() << "Enregistrement déjà en cours";
         return;
     }
 
     if (!m_audioSource) {
-        emit error("Aucun périphérique audio disponible!\n\nVérifiez votre microphone dans les paramètres Windows.");
+        emit error("Aucun périphérique audio disponible!");
         return;
     }
 
@@ -119,39 +82,19 @@ void VoiceRecognition::startRecording()
     m_audioBuffer.setBuffer(&m_audioData);
     m_audioBuffer.open(QIODevice::WriteOnly);
 
-    qDebug() << "🎤 Démarrage de l'enregistrement...";
-    qDebug() << "   Buffer size:" << m_audioSource->bufferSize();
-    qDebug() << "   Volume:" << m_audioSource->volume();
-    qDebug() << "   Format:" << m_audioSource->format().sampleRate() << "Hz";
-
     m_audioDevice = m_audioSource->start();
 
     if (m_audioDevice) {
         connect(m_audioDevice, &QIODevice::readyRead, this, [this]() {
             QByteArray data = m_audioDevice->readAll();
-
             if (!data.isEmpty()) {
                 m_audioData.append(data);
-
-                // Calculate audio level for debugging
-                const qint16* samples = reinterpret_cast<const qint16*>(data.constData());
-                int numSamples = data.size() / 2;
-                qint16 maxAmplitude = 0;
-
-                for (int i = 0; i < numSamples; i++) {
-                    qint16 amp = qAbs(samples[i]);
-                    if (amp > maxAmplitude) maxAmplitude = amp;
-                }
-
-                qDebug() << "📊 Audio:" << data.size() << "octets, Amplitude max:" << maxAmplitude
-                         << "(Total:" << m_audioData.size() << "octets)";
             }
         });
 
         m_isRecording = true;
         m_recordingTimer->start(MAX_RECORDING_TIME);
         emit recordingStarted();
-        qDebug() << "✅ Enregistrement démarré - PARLEZ MAINTENANT!";
     } else {
         emit error("Impossible de démarrer l'enregistrement audio");
     }
@@ -169,74 +112,43 @@ void VoiceRecognition::stopRecording()
     m_isRecording = false;
 
     emit recordingStopped();
-    qDebug() << "⏹️ Enregistrement arrêté. Taille totale:" << m_audioData.size() << "octets";
 
     if (m_audioData.size() < 1000) {
-        qDebug() << "❌ Audio trop court:" << m_audioData.size() << "octets";
-        emit error("Audio trop court!\n\nEnregistrement: " + QString::number(m_audioData.size()) + " octets\n\nVérifiez:\n- Microphone activé dans Windows\n- Volume du micro augmenté\n- Permissions de l'application");
+        emit error("Audio trop court! Parlez plus longtemps.");
         return;
     }
 
-    // Detailed audio analysis
+
     const qint16* samples = reinterpret_cast<const qint16*>(m_audioData.constData());
     int numSamples = m_audioData.size() / 2;
 
     qint16 maxAmplitude = 0;
-    qint64 totalAmplitude = 0;
     int nonZeroSamples = 0;
 
     for (int i = 0; i < numSamples; i++) {
         qint16 amp = qAbs(samples[i]);
         if (amp > maxAmplitude) maxAmplitude = amp;
-        totalAmplitude += amp;
         if (amp > 10) nonZeroSamples++;
     }
 
-    double avgAmplitude = numSamples > 0 ? (double)totalAmplitude / numSamples : 0;
-
-    qDebug() << "📈 ANALYSE AUDIO:";
-    qDebug() << "   Échantillons:" << numSamples;
-    qDebug() << "   Amplitude max:" << maxAmplitude << "/ 32767";
-    qDebug() << "   Amplitude moyenne:" << avgAmplitude;
-    qDebug() << "   Échantillons non-silencieux:" << nonZeroSamples;
-
-    // Much more lenient threshold
-    if (maxAmplitude < 50) {  // Changed from 100 to 50
-        qDebug() << "❌ AMPLITUDE TROP FAIBLE!";
-        emit error(QString("Aucun son détecté!\n\nAmplitude max: %1 / 32767\n\n"
-                           "Solutions:\n"
-                           "1. Augmentez le volume du microphone dans Windows\n"
-                           "2. Parlez TRÈS près du micro\n"
-                           "3. Vérifiez les permissions de l'application\n"
-                           "4. Testez avec un autre microphone")
-                       .arg(maxAmplitude));
+    if (maxAmplitude < 50) {
+        emit error("Aucun son détecté! Augmentez le volume du microphone.");
         return;
     }
 
     if (nonZeroSamples < (numSamples / 10)) {
-        qDebug() << "⚠️ Trop de silence détecté";
-        emit error(QString("Audio majoritairement silencieux!\n\n"
-                           "Échantillons valides: %1 / %2\n\n"
-                           "Parlez plus fort et plus longtemps")
-                       .arg(nonZeroSamples).arg(numSamples));
+        emit error("Audio majoritairement silencieux! Parlez plus fort.");
         return;
     }
 
-    qDebug() << "✅ Audio valide, conversion en WAV...";
 
-    // Save audio as WAV
     QByteArray wavData = convertToWav(m_audioData, m_sampleRate);
-
     QString wavFilePath = QCoreApplication::applicationDirPath() + "/temp_voice.wav";
     QFile wavFile(wavFilePath);
 
     if (wavFile.open(QIODevice::WriteOnly)) {
         wavFile.write(wavData);
         wavFile.close();
-        qDebug() << "💾 Audio sauvegardé:" << wavFilePath;
-        qDebug() << "📊 Taille fichier WAV:" << wavData.size() << "octets";
-
-        // Process with Python script
         processWithPython(wavFilePath);
     } else {
         emit error("Impossible de sauvegarder le fichier audio");
@@ -245,11 +157,8 @@ void VoiceRecognition::stopRecording()
 
 void VoiceRecognition::handleStateChanged(QAudio::State state)
 {
-    switch (state) {
-    case QAudio::StoppedState:
+    if (state == QAudio::StoppedState) {
         if (m_audioSource && m_audioSource->error() != QAudio::NoError) {
-            qDebug() << "❌ Erreur audio:" << m_audioSource->error();
-
             QString errorMsg;
             switch (m_audioSource->error()) {
             case QAudio::OpenError:
@@ -267,25 +176,13 @@ void VoiceRecognition::handleStateChanged(QAudio::State state)
             default:
                 errorMsg = "Erreur audio inconnue";
             }
-
-            emit error(errorMsg + "\n\nVérifiez votre microphone dans Windows");
+            emit error(errorMsg);
         }
-        break;
-    case QAudio::ActiveState:
-        qDebug() << "✅ Audio ACTIF - Parlez maintenant!";
-        break;
-    case QAudio::IdleState:
-        qDebug() << "⏸️ Audio en veille";
-        break;
-    default:
-        break;
     }
 }
 
 void VoiceRecognition::processWithPython(const QString &wavFilePath)
 {
-    qDebug() << "🐍 Lancement de la reconnaissance vocale Python...";
-
     QString scriptPath = QCoreApplication::applicationDirPath() + "/speech_recognizer.py";
     createPythonScript(scriptPath);
 
@@ -298,39 +195,24 @@ void VoiceRecognition::processWithPython(const QString &wavFilePath)
                 QString output = QString::fromUtf8(process->readAllStandardOutput()).trimmed();
                 QString errorOutput = QString::fromUtf8(process->readAllStandardError()).trimmed();
 
-                qDebug() << "=== RÉSULTAT PYTHON ===";
-                qDebug() << "Code de sortie:" << exitCode;
-                qDebug() << "Sortie:" << output;
-
-                if (!errorOutput.isEmpty()) {
-                    qDebug() << "Erreurs:" << errorOutput;
-                }
-
-                if (output.contains("No module named 'speech_recognition'") ||
-                    errorOutput.contains("No module named 'speech_recognition'")) {
-                    emit error("Module Python manquant!\n\nOuvrez un terminal et tapez:\npip install SpeechRecognition");
+                if (output.contains("No module named 'speech_recognition'")) {
+                    emit error("Module Python manquant!\n\nOuvrez un terminal:\npip install SpeechRecognition");
                     process->deleteLater();
                     return;
                 }
 
                 if (exitCode == 0 && !output.isEmpty()) {
-                    if (output.contains("Error:", Qt::CaseInsensitive) ||
-                        output.contains("Exception:", Qt::CaseInsensitive)) {
+                    if (output.contains("Error:", Qt::CaseInsensitive)) {
                         emit error("Erreur: " + output);
                     } else {
-                        qDebug() << "✅ TEXTE RECONNU:" << output;
                         emit textRecognized(output);
                     }
                 } else if (output.contains("Could not understand")) {
-                    emit error("Audio incompréhensible\n\nConseils:\n- Parlez plus clairement\n- Rapprochez-vous du micro\n- Réduisez le bruit ambiant");
-                } else if (output.contains("request error") || output.contains("RequestError")) {
-                    emit error("Erreur réseau\n\nGoogle Speech Recognition nécessite:\n- Connexion internet active");
+                    emit error("Audio incompréhensible. Parlez plus clairement.");
+                } else if (output.contains("request error")) {
+                    emit error("Erreur réseau. Vérifiez votre connexion internet.");
                 } else {
-                    QString detailedError = "Reconnaissance échouée\n\n";
-                    detailedError += "Code de sortie: " + QString::number(exitCode) + "\n";
-                    detailedError += "Sortie: " + (output.isEmpty() ? "(vide)" : output) + "\n";
-                    detailedError += "Erreurs: " + (errorOutput.isEmpty() ? "(aucune)" : errorOutput);
-                    emit error(detailedError);
+                    emit error("Reconnaissance échouée");
                 }
 
                 process->deleteLater();
@@ -338,12 +220,13 @@ void VoiceRecognition::processWithPython(const QString &wavFilePath)
 
     connect(process, &QProcess::errorOccurred, this, [this, process](QProcess::ProcessError error) {
         if (error == QProcess::FailedToStart) {
-            emit this->error("Python non trouvé!\n\nInstallez Python 3:\nhttps://python.org\n\nPuis:\npip install SpeechRecognition");
+            emit this->error("Python non trouvé!\n\nInstallez Python 3 depuis:\nhttps://python.org");
         } else {
             emit this->error("Erreur Python");
         }
         process->deleteLater();
     });
+
 
     QStringList pythonCommands = {"python", "python3", "py"};
     QString foundPython;
@@ -353,23 +236,21 @@ void VoiceRecognition::processWithPython(const QString &wavFilePath)
         testProcess.start(pythonCmd, QStringList() << "--version");
         if (testProcess.waitForFinished(2000) && testProcess.exitCode() == 0) {
             foundPython = pythonCmd;
-            qDebug() << "🐍 Python trouvé:" << pythonCmd;
             break;
         }
     }
 
     if (foundPython.isEmpty()) {
-        emit error("Python non installé!\n\nhttps://www.python.org/downloads/");
+        emit error("Python non installé!");
         return;
     }
 
-    // CRITICAL FIX: Clear Qt's MinGW environment variables that conflict with Python
+
     QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     env.remove("PYTHONHOME");
     env.remove("PYTHONPATH");
     process->setProcessEnvironment(env);
 
-    qDebug() << "Lancement Python avec environnement nettoyé";
     process->start(foundPython, QStringList() << scriptPath << wavFilePath);
 }
 
