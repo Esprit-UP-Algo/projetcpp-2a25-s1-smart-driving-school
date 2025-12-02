@@ -33,7 +33,7 @@ private slots:
     void on_tabWidget_currentChanged(int index);
     void on_comboTypeStats_currentIndexChanged(int);
 
-    // --- Calendrier ---
+   // --- Calendrier ---
     void refreshCalendarMarks();
     void on_calendar_selectionChanged();
     void on_btnAddPlan_clicked();

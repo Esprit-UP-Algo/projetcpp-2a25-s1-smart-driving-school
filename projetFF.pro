@@ -1,5 +1,7 @@
 QT       += core gui
 QT += sql
+QT += core gui widgets sql
+
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++17
@@ -13,14 +15,16 @@ SOURCES += \
     logindialog.cpp \
     main.cpp \
     mainwindow.cpp \
-    connexion.cpp
+    connexion.cpp \
+    statschartwidget.cpp
 
 HEADERS += \
     exam.h \
     logindialog.h \
     mainwindow.h \
     connexion.h \
-    role.h
+    role.h \
+    statschartwidget.h
 
 FORMS += \
     logindialog.ui \

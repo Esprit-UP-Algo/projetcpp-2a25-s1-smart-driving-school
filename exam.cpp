@@ -280,4 +280,50 @@ QSqlQueryModel* Exam::afficherParDate(bool asc)
     m->setHeaderData(4, Qt::Horizontal, "CIN");
     return m;
 }
+QSqlQueryModel* Exam::statsMensuellesPivot()
+{
+    // Modèle de stats : lignes = mois (1..12), colonnes = Code/Conduite (Total, Succès, Taux%)
+    auto *m = new QSqlQueryModel;
+    const char* sql =
+        "WITH B AS ( "
+        "  SELECT EXTRACT(MONTH FROM DATE_EXAM) AS MOIS, "
+        "         UPPER(TYPE) AS T, "
+        "         COUNT(*) AS TOTAL, "
+        "         SUM(CASE WHEN UPPER(RESULTAT) IN ('REUSSITE','RÉUSSITE') THEN 1 ELSE 0 END) AS SUCCES "
+        "  FROM EXAMENS "
+        "  WHERE EXTRACT(YEAR FROM DATE_EXAM) = EXTRACT(YEAR FROM SYSDATE) "
+        "  GROUP BY EXTRACT(MONTH FROM DATE_EXAM), UPPER(TYPE) "
+        "), "
+        "M AS (SELECT LEVEL AS MOIS FROM DUAL CONNECT BY LEVEL <= 12) "
+        "SELECT M.MOIS, "
+        "       NVL(SUM(CASE WHEN B.T='CODE'      THEN B.TOTAL  END),0) AS TOTAL_CODE, "
+        "       NVL(SUM(CASE WHEN B.T='CODE'      THEN B.SUCCES END),0) AS SUCCES_CODE, "
+        "       CASE WHEN NVL(SUM(CASE WHEN B.T='CODE' THEN B.TOTAL END),0)=0 "
+        "            THEN 0 "
+        "            ELSE ROUND(100 * NVL(SUM(CASE WHEN B.T='CODE' THEN B.SUCCES END),0) "
+        "                        / NVL(SUM(CASE WHEN B.T='CODE' THEN B.TOTAL END),0), 2) "
+        "       END AS TAUX_CODE, "
+        "       NVL(SUM(CASE WHEN B.T='CONDUITE'  THEN B.TOTAL  END),0) AS TOTAL_COND, "
+        "       NVL(SUM(CASE WHEN B.T='CONDUITE'  THEN B.SUCCES END),0) AS SUCCES_COND, "
+        "       CASE WHEN NVL(SUM(CASE WHEN B.T='CONDUITE' THEN B.TOTAL END),0)=0 "
+        "            THEN 0 "
+        "            ELSE ROUND(100 * NVL(SUM(CASE WHEN B.T='CONDUITE' THEN B.SUCCES END),0) "
+        "                        / NVL(SUM(CASE WHEN B.T='CONDUITE' THEN B.TOTAL END),0), 2) "
+        "       END AS TAUX_COND "
+        "FROM M LEFT JOIN B ON B.MOIS = M.MOIS "
+        "GROUP BY M.MOIS "
+        "ORDER BY M.MOIS";
+    m->setQuery(sql);
+
+    // Entêtes lisibles
+    m->setHeaderData(0, Qt::Horizontal, "Mois");
+    m->setHeaderData(1, Qt::Horizontal, "Total Code");
+    m->setHeaderData(2, Qt::Horizontal, "Réussites Code");
+    m->setHeaderData(3, Qt::Horizontal, "Taux Code (%)");
+    m->setHeaderData(4, Qt::Horizontal, "Total Conduite");
+    m->setHeaderData(5, Qt::Horizontal, "Réussites Conduite");
+    m->setHeaderData(6, Qt::Horizontal, "Taux Conduite (%)");
+
+    return m;
+}
 
