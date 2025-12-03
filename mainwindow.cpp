@@ -1,19 +1,22 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
-
 #include <QMessageBox>
 #include <QDate>
 #include <QHeaderView>
 #include <QAbstractItemModel>
-
 #include <QFileDialog>
 #include <QPdfWriter>
 #include <QPainter>
 #include <QPageSize>
-
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QVBoxLayout>
+#include <QRegularExpression>  // ✅ REQUIRED
+#include <QTableWidgetItem>    // ✅ REQUIRED
+#include <QDebug>              // ✅ REQUIRED
+
+#include "exam.h"
+#include "vehicule.h"          // ✅ REQUIRED
 
 
 
@@ -67,45 +70,91 @@ static bool canAddConduiteSuccess(const QString& cin, const QDate& dateConduite)
 }
 
 
-#include "exam.h"
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    QCalendarWidget cal;
+    auto cal = ui->calendar;
+    Q_ASSERT(call);
 
+    // Safe lambda with null check
+    const auto go = [this](QWidget* page){
+        if (page && ui->stack) {
+            ui->stack->setCurrentWidget(page);
+        }
+    };
 
+    // Only connect if buttons AND pages exist
+    if (ui->btnExamens && ui->pageExamens)
+        connect(ui->btnExamens, &QPushButton::clicked, this, [=]{ go(ui->pageExamens); });
 
-    const auto go = [&](QWidget* page){ ui->stack->setCurrentWidget(page); };
-    connect(ui->btnExamens,  &QPushButton::clicked, this, [=]{ go(ui->pageExamens);  });
-    connect(ui->btnCandidat, &QPushButton::clicked, this, [=]{ go(ui->pageCandidats); });
-    connect(ui->btnMoniteur, &QPushButton::clicked, this, [=]{ go(ui->pageMoniteur);  });
-    connect(ui->btnVehicule, &QPushButton::clicked, this, [=]{ go(ui->pageVehicules); });
-    connect(ui->btnFinance,  &QPushButton::clicked, this, [=]{ go(ui->pageFinance);  });
+    if (ui->btnCandidat && ui->pageCandidats)
+        connect(ui->btnCandidat, &QPushButton::clicked, this, [=]{ go(ui->pageCandidats); });
 
+    if (ui->btnMoniteur && ui->pageMoniteur)
+        connect(ui->btnMoniteur, &QPushButton::clicked, this, [=]{ go(ui->pageMoniteur); });
 
-    //calendrier
-    connect(ui->calendar, &QCalendarWidget::currentPageChanged,this, [this](int, int){ refreshCalendarMarks(); });
+    if (ui->btnVehicule && ui->pageVehicules)
+        connect(ui->btnVehicule, &QPushButton::clicked, this, [=]{
+            if (ui->stack && ui->pageVehicules) {
+                ui->stack->setCurrentWidget(ui->pageVehicules);
+                loadVehicleData(); // Refresh vehicle data when opening
+            }
+        });
 
-    ui->calendar->setGridVisible(true);
-    ui->comboTypePlan->clear();
-    ui->comboTypePlan->addItems({ "Code", "Conduite" });
-    ui->datePlan->setDate(QDate::currentDate());
-    ui->timePlan->setTime(QTime::currentTime());
-    ui->listDay->setAlternatingRowColors(true);
-    ui->listDay->setSelectionMode(QAbstractItemView::SingleSelection);
-    ui->listDay->setWordWrap(true);
+    if (ui->btnFinance && ui->pageFinance)
+        connect(ui->btnFinance, &QPushButton::clicked, this, [=]{ go(ui->pageFinance); });
 
-    refreshCalendarMarks();
-    loadDayList(ui->calendar->selectedDate());
+    // Calendar setup with safety checks
+    if (ui->calendar) {
+        connect(ui->calendar, &QCalendarWidget::currentPageChanged,
+                this, [this](int, int){ refreshCalendarMarks(); });
+        ui->calendar->setGridVisible(true);
+    }
 
+    // ComboBox setup with safety checks
+    if (ui->comboTypePlan) {
+        ui->comboTypePlan->clear();
+        ui->comboTypePlan->addItems({ "Code", "Conduite" });
+    }
 
-    // page par défaut :
-    ui->stack->setCurrentWidget(ui->pageExamens);
+    if (ui->datePlan)
+        ui->datePlan->setDate(QDate::currentDate());
+
+    if (ui->timePlan)
+        ui->timePlan->setTime(QTime::currentTime());
+
+    if (ui->listDay) {
+        ui->listDay->setAlternatingRowColors(true);
+        ui->listDay->setSelectionMode(QAbstractItemView::SingleSelection);
+        ui->listDay->setWordWrap(true);
+    }
+
+    if (ui->calendar) {
+        refreshCalendarMarks();
+        loadDayList(ui->calendar->selectedDate());
+    }
+
+    // Set default page
+    if (ui->stack && ui->pageExamens)
+        ui->stack->setCurrentWidget(ui->pageExamens);
+
+    // Field mask setup
     auto setMaskForField = [this](const QString &field){
+        if (!ui->lineEdit_7) return;
+
         ui->lineEdit_7->setInputMask("");
         ui->lineEdit_7->setMaxLength(64);
         ui->lineEdit_7->clear();
+        if (ui->tableWidget) {
+            ui->tableWidget->setSelectionBehavior(QAbstractItemView::SelectRows);
+            ui->tableWidget->setSelectionMode(QAbstractItemView::SingleSelection);
+            ui->tableWidget->setAlternatingRowColors(true);
+        }
+        loadVehicleData();
 
         if (field == "CIN") {
             ui->lineEdit_7->setInputMask("00000000;_");
@@ -122,44 +171,49 @@ MainWindow::MainWindow(QWidget *parent)
             ui->lineEdit_7->setPlaceholderText("Lettres/espaces (' -)");
         }
     };
-    setMaskForField(ui->comboBox_4->currentText());
-    connect(ui->comboBox_4, &QComboBox::currentTextChanged, this, setMaskForField);
 
-
-    // sélection par lignes
-    ui->tableViewExams->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->tableViewExams->setSelectionMode(QAbstractItemView::SingleSelection);
-
-    // un peu de confort visuel, sans tout repeindre
-    ui->tableViewExams->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    ui->tableViewExams->setAlternatingRowColors(false);
-    // activer le survol (léger)
-    ui->tableViewExams->setMouseTracking(true);
-    ui->tableViewExams->viewport()->setMouseTracking(true);
-    ui->tableViewExams->viewport()->setAttribute(Qt::WA_Hover, true);
-
-    // Style MINIMAL : cellule survolée très légère + sélection lisible
-    ui->tableViewExams->setStyleSheet(
-        "QTableView::item:hover { background: rgba(0,0,0,0.06); }"
-        "QTableView::item:selected { background: #CDE5FF; color: black; }"
-        );
-
-    loadTableData();
-    statsChartView = new StatsChartWidget(this);
-    if (auto lay = qobject_cast<QVBoxLayout*>(ui->chartContainer->layout())) {
-        lay->addWidget(statsChartView);
-    } else {
-        auto *v = new QVBoxLayout(ui->chartContainer);
-        v->setContentsMargins(0,0,0,0);
-        v->addWidget(statsChartView);
+    if (ui->comboBox_4) {
+        setMaskForField(ui->comboBox_4->currentText());
+        connect(ui->comboBox_4, &QComboBox::currentTextChanged, this, setMaskForField);
     }
 
-    // Combo “Code/Conduite” => recharge
-    connect(ui->comboTypeStats, SIGNAL(currentIndexChanged(int)),
-            this, SLOT(on_comboTypeStats_currentIndexChanged(int)));
+    // Table view setup
+    if (ui->tableViewExams) {
+        ui->tableViewExams->setSelectionBehavior(QAbstractItemView::SelectRows);
+        ui->tableViewExams->setSelectionMode(QAbstractItemView::SingleSelection);
+        ui->tableViewExams->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+        ui->tableViewExams->setAlternatingRowColors(false);
+        ui->tableViewExams->setMouseTracking(true);
+        ui->tableViewExams->viewport()->setMouseTracking(true);
+        ui->tableViewExams->viewport()->setAttribute(Qt::WA_Hover, true);
 
+        ui->tableViewExams->setStyleSheet(
+            "QTableView::item:hover { background: rgba(0,0,0,0.06); }"
+            "QTableView::item:selected { background: #CDE5FF; color: black; }"
+            );
+    }
 
-    if (ui->tableViewExams->horizontalHeader())
+    loadTableData();
+
+    // Stats chart setup with safety check
+    if (ui->chartContainer) {
+        statsChartView = new StatsChartWidget(this);
+        if (auto lay = qobject_cast<QVBoxLayout*>(ui->chartContainer->layout())) {
+            lay->addWidget(statsChartView);
+        } else {
+            auto *v = new QVBoxLayout(ui->chartContainer);
+            v->setContentsMargins(0,0,0,0);
+            v->addWidget(statsChartView);
+        }
+    }
+
+    // Combo stats connection
+    if (ui->comboTypeStats) {
+        connect(ui->comboTypeStats, SIGNAL(currentIndexChanged(int)),
+                this, SLOT(on_comboTypeStats_currentIndexChanged(int)));
+    }
+
+    if (ui->tableViewExams && ui->tableViewExams->horizontalHeader())
         ui->tableViewExams->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 }
 
@@ -599,24 +653,22 @@ void MainWindow::setRole(Role r) {
 void MainWindow::applyRole() {
     const bool isAdmin    = (role_ == Role::Admin);
     const bool isRH       = (role_ == Role::RH);
-
     const bool isMobExam  = (role_ == Role::MobiliteExamens);
     const bool isFinance  = (role_ == Role::Finance);
 
-    // Accueil toujours visible (si tu as un bouton Accueil)
+    // Accueil always visible
     if (ui->btnAccueil) ui->btnAccueil->setVisible(true);
 
-    // Boutons RH
-    ui->btnCandidat->setVisible(isAdmin || isRH);
-    ui->btnMoniteur->setVisible(isAdmin || isRH);
+    // RH buttons
+    if (ui->btnCandidat) ui->btnCandidat->setVisible(isAdmin || isRH);
+    if (ui->btnMoniteur) ui->btnMoniteur->setVisible(isAdmin || isRH);
 
-    // Boutons Mobilité & Examens
-    ui->btnVehicule->setVisible(isAdmin || isMobExam);
-    ui->btnExamens->setVisible(isAdmin || isMobExam);
+    // Vehicle and Exams - both for MobiliteExamens
+    if (ui->btnVehicule) ui->btnVehicule->setVisible(isAdmin || isMobExam);
+    if (ui->btnExamens)  ui->btnExamens->setVisible(isAdmin || isMobExam);
 
-    // Bouton Finance
-    ui->btnFinance->setVisible(isAdmin || isFinance);
-
+    // Finance button
+    if (ui->btnFinance) ui->btnFinance->setVisible(isAdmin || isFinance);
 }
 
 //calendrier
@@ -821,4 +873,310 @@ void MainWindow::on_btnDelPlan_clicked()
 
 void MainWindow::on_btnRefreshPlan_clicked() {
     refreshCalendarMarks();
+}
+
+// ============================================================================
+// VEHICLE MANAGEMENT FUNCTIONS - COMPLETE AND VERIFIED
+// Add these to the END of mainwindow.cpp (after calendar functions)
+// ============================================================================
+
+// Load vehicle data into table
+void MainWindow::loadVehicleData()
+{
+    if (!ui->tableWidget) return;
+
+    ui->tableWidget->setRowCount(0);
+    ui->tableWidget->setColumnCount(5);
+
+    QStringList headers;
+    headers << "ID" << "Matricule" << "Marque" << "Kilométrage" << "État";
+    ui->tableWidget->setHorizontalHeaderLabels(headers);
+
+    QSqlQuery q;
+    q.prepare("SELECT ID_U, MATRICULE, MARQUE, KILOMETRAGE, ETAT FROM VEHICULE ORDER BY MATRICULE");
+
+    if (!q.exec()) {
+        qDebug() << "Erreur chargement véhicules:" << q.lastError().text();
+        return;
+    }
+
+    int row = 0;
+    while (q.next()) {
+        ui->tableWidget->insertRow(row);
+
+        ui->tableWidget->setItem(row, 0, new QTableWidgetItem(q.value(0).toString()));
+        ui->tableWidget->setItem(row, 1, new QTableWidgetItem(q.value(1).toString()));
+        ui->tableWidget->setItem(row, 2, new QTableWidgetItem(q.value(2).toString()));
+        ui->tableWidget->setItem(row, 3, new QTableWidgetItem(q.value(3).toString() + " km"));
+        ui->tableWidget->setItem(row, 4, new QTableWidgetItem(q.value(4).toString()));
+
+        row++;
+    }
+}
+
+void MainWindow::clearVehicleForm()
+{
+    if (ui->lineEdit) ui->lineEdit->clear();
+    if (ui->lineEdit_2) ui->lineEdit_2->clear();
+    if (ui->lineEdit_4) ui->lineEdit_4->clear();
+    if (ui->comboBox) ui->comboBox->setCurrentIndex(0);
+}
+
+// Add vehicle
+void MainWindow::on_pushButton_clicked()
+{
+    if (role_ != Role::Admin && role_ != Role::MobiliteExamens) {
+        QMessageBox::warning(this, "Droits", "Action réservée à l'admin ou mobilité.");
+        return;
+    }
+
+    QString marque = ui->lineEdit->text().trimmed();
+    QString matricule = ui->lineEdit_2->text().trimmed().toUpper();
+    QString kmStr = ui->lineEdit_4->text().trimmed();
+    QString etat = ui->comboBox->currentText().trimmed();
+
+    if (marque.isEmpty() || matricule.isEmpty() || kmStr.isEmpty()) {
+        QMessageBox::warning(this, "Erreur", "Tous les champs sont obligatoires.");
+        return;
+    }
+
+    // Validate matricule format
+    QRegularExpression matriculeRegex("^\\d{1,3}[A-Z]{2}\\d{1,4}$");
+    if (!matriculeRegex.match(matricule).hasMatch()) {
+        QMessageBox::warning(this, "Erreur",
+                             "Format matricule invalide.\nFormat attendu: 123TU1234");
+        return;
+    }
+
+    bool ok;
+    int km = kmStr.toInt(&ok);
+    if (!ok || km < 0) {
+        QMessageBox::warning(this, "Erreur", "Kilométrage invalide.");
+        return;
+    }
+
+    // Generate ID
+    QSqlQuery idQuery;
+    int id = 1;
+    if (idQuery.exec("SELECT NVL(MAX(ID_U), 0) + 1 FROM VEHICULE")) {
+        if (idQuery.next()) {
+            id = idQuery.value(0).toInt();
+        }
+    }
+
+    // Insert into database
+    QSqlQuery q;
+    q.prepare("INSERT INTO VEHICULE (ID_U, MATRICULE, MARQUE, KILOMETRAGE, ETAT) "
+              "VALUES (:id, :mat, :marque, :km, :etat)");
+    q.bindValue(":id", id);
+    q.bindValue(":mat", matricule);
+    q.bindValue(":marque", marque);
+    q.bindValue(":km", km);
+    q.bindValue(":etat", etat);
+
+    if (q.exec()) {
+        loadVehicleData();
+        clearVehicleForm();
+        QMessageBox::information(this, "Succès", "Véhicule ajouté.");
+    } else {
+        QMessageBox::critical(this, "Erreur", "Échec d'ajout:\n" + q.lastError().text());
+    }
+}
+
+// Search vehicle
+void MainWindow::on_pushButton_2_clicked()
+{
+    QString search = ui->lineEdit_3->text().trimmed();
+
+    if (!ui->tableWidget) return;
+
+    if (search.isEmpty()) {
+        loadVehicleData();
+        return;
+    }
+
+    ui->tableWidget->setRowCount(0);
+
+    QSqlQuery q;
+    q.prepare("SELECT ID_U, MATRICULE, MARQUE, KILOMETRAGE, ETAT FROM VEHICULE "
+              "WHERE UPPER(MATRICULE) LIKE UPPER(:s) OR UPPER(MARQUE) LIKE UPPER(:s) "
+              "ORDER BY MATRICULE");
+    q.bindValue(":s", "%" + search + "%");
+
+    if (!q.exec()) {
+        QMessageBox::critical(this, "Erreur", "Recherche échouée:\n" + q.lastError().text());
+        return;
+    }
+
+    int row = 0;
+    while (q.next()) {
+        ui->tableWidget->insertRow(row);
+        ui->tableWidget->setItem(row, 0, new QTableWidgetItem(q.value(0).toString()));
+        ui->tableWidget->setItem(row, 1, new QTableWidgetItem(q.value(1).toString()));
+        ui->tableWidget->setItem(row, 2, new QTableWidgetItem(q.value(2).toString()));
+        ui->tableWidget->setItem(row, 3, new QTableWidgetItem(q.value(3).toString() + " km"));
+        ui->tableWidget->setItem(row, 4, new QTableWidgetItem(q.value(4).toString()));
+        row++;
+    }
+
+    if (row == 0) {
+        QMessageBox::information(this, "Recherche", "Aucun véhicule trouvé.");
+    }
+}
+
+// Show all vehicles
+void MainWindow::on_pushButton_4_clicked()
+{
+    loadVehicleData();
+    if (ui->lineEdit_3) ui->lineEdit_3->clear();
+}
+
+// Delete all vehicles
+void MainWindow::on_pushButton_5_clicked()
+{
+    if (role_ != Role::Admin) {
+        QMessageBox::warning(this, "Droits", "Action réservée à l'admin uniquement.");
+        return;
+    }
+
+    auto reply = QMessageBox::question(this, "Confirmation",
+                                       "Supprimer TOUS les véhicules ?",
+                                       QMessageBox::Yes | QMessageBox::No);
+
+    if (reply == QMessageBox::Yes) {
+        QSqlQuery q("DELETE FROM VEHICULE");
+
+        if (q.exec()) {
+            loadVehicleData();
+            QMessageBox::information(this, "Succès", "Tous les véhicules supprimés.");
+        } else {
+            QMessageBox::critical(this, "Erreur", "Suppression échouée:\n" + q.lastError().text());
+        }
+    }
+}
+
+// Delete selected vehicle
+void MainWindow::on_pushButton_6_clicked()
+{
+    if (role_ != Role::Admin && role_ != Role::MobiliteExamens) {
+        QMessageBox::warning(this, "Droits", "Action réservée à l'admin.");
+        return;
+    }
+
+    int row = ui->tableWidget->currentRow();
+    if (row < 0) {
+        QMessageBox::warning(this, "Erreur", "Sélectionnez un véhicule.");
+        return;
+    }
+
+    int id = ui->tableWidget->item(row, 0)->text().toInt();
+
+    auto reply = QMessageBox::question(this, "Confirmation",
+                                       "Supprimer ce véhicule ?",
+                                       QMessageBox::Yes | QMessageBox::No);
+
+    if (reply == QMessageBox::Yes) {
+        QSqlQuery q;
+        q.prepare("DELETE FROM VEHICULE WHERE ID_U = :id");
+        q.bindValue(":id", id);
+
+        if (q.exec()) {
+            loadVehicleData();
+            QMessageBox::information(this, "Succès", "Véhicule supprimé.");
+        } else {
+            QMessageBox::critical(this, "Erreur", "Suppression échouée:\n" + q.lastError().text());
+        }
+    }
+}
+
+// Sort vehicles
+void MainWindow::on_pushButton_9_clicked()
+{
+    QString criteria = ui->comboBox_3->currentText().trimmed();
+
+    if (!ui->tableWidget) return;
+
+    ui->tableWidget->setRowCount(0);
+
+    QSqlQuery q;
+    if (criteria == "en kilometrage") {
+        q.prepare("SELECT ID_U, MATRICULE, MARQUE, KILOMETRAGE, ETAT FROM VEHICULE ORDER BY KILOMETRAGE DESC");
+    } else if (criteria == "en etat") {
+        q.prepare("SELECT ID_U, MATRICULE, MARQUE, KILOMETRAGE, ETAT FROM VEHICULE ORDER BY ETAT, MATRICULE");
+    } else {
+        q.prepare("SELECT ID_U, MATRICULE, MARQUE, KILOMETRAGE, ETAT FROM VEHICULE ORDER BY MATRICULE");
+    }
+
+    if (!q.exec()) {
+        QMessageBox::critical(this, "Erreur", "Tri échoué:\n" + q.lastError().text());
+        return;
+    }
+
+    int row = 0;
+    while (q.next()) {
+        ui->tableWidget->insertRow(row);
+        ui->tableWidget->setItem(row, 0, new QTableWidgetItem(q.value(0).toString()));
+        ui->tableWidget->setItem(row, 1, new QTableWidgetItem(q.value(1).toString()));
+        ui->tableWidget->setItem(row, 2, new QTableWidgetItem(q.value(2).toString()));
+        ui->tableWidget->setItem(row, 3, new QTableWidgetItem(q.value(3).toString() + " km"));
+        ui->tableWidget->setItem(row, 4, new QTableWidgetItem(q.value(4).toString()));
+        row++;
+    }
+}
+
+// Modify vehicle
+void MainWindow::on_pushButton_10_clicked()
+{
+    if (role_ != Role::Admin && role_ != Role::MobiliteExamens) {
+        QMessageBox::warning(this, "Droits", "Action réservée à l'admin.");
+        return;
+    }
+
+    int row = ui->tableWidget->currentRow();
+    if (row < 0) {
+        QMessageBox::warning(this, "Erreur", "Sélectionnez un véhicule dans le tableau.");
+        return;
+    }
+
+    int id = ui->tableWidget->item(row, 0)->text().toInt();
+    QString champ = ui->comboBox_2->currentText().trimmed();
+    QString newValue = ui->lineEdit_5->text().trimmed();
+
+    if (newValue.isEmpty()) {
+        QMessageBox::warning(this, "Erreur", "Entrez une nouvelle valeur.");
+        return;
+    }
+
+    QString column;
+    if (champ == "marque") {
+        column = "MARQUE";
+    } else if (champ == "matricule") {
+        column = "MATRICULE";
+    } else if (champ == "kilometrage") {
+        column = "KILOMETRAGE";
+        bool ok;
+        newValue.toInt(&ok);
+        if (!ok) {
+            QMessageBox::warning(this, "Erreur", "Le kilométrage doit être un nombre!");
+            return;
+        }
+    } else if (champ == "etat") {
+        column = "ETAT";
+    } else {
+        QMessageBox::warning(this, "Erreur", "Champ invalide.");
+        return;
+    }
+
+    QSqlQuery q;
+    q.prepare(QString("UPDATE VEHICULE SET %1 = :val WHERE ID_U = :id").arg(column));
+    q.bindValue(":val", newValue);
+    q.bindValue(":id", id);
+
+    if (q.exec()) {
+        loadVehicleData();
+        ui->lineEdit_5->clear();
+        QMessageBox::information(this, "Succès", "Véhicule modifié.");
+    } else {
+        QMessageBox::critical(this, "Erreur", "Modification échouée:\n" + q.lastError().text());
+    }
 }

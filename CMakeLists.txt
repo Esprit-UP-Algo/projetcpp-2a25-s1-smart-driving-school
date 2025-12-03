@@ -14,6 +14,7 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Sql PrintSupport 
 set(PROJECT_SOURCES
     # Main file (merged integration)
     main.cpp
+    projetFF.pro
 
     # Vehicule branch files
     mainwindowV.cpp
@@ -25,6 +26,8 @@ set(PROJECT_SOURCES
     emailsender.cpp
     voicerecognition.h
     voicerecognition.cpp
+    statschartwidget.h
+    statschartwidget.cpp
 
     # Examens branch files - MAIN UI
     mainwindow.cpp
@@ -39,6 +42,7 @@ set(PROJECT_SOURCES
     connexion.cpp
     connexion.h
     connexion.ui
+
 
     # Connection files (shared)
     connection.h

@@ -1,35 +1,53 @@
-QT       += core gui
-QT += sql
-QT += core gui widgets sql
+QT       += core gui sql widgets
+QT       += printsupport charts network multimedia
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 CONFIG += c++17
 
-# You can make your code fail to compile if it uses deprecated APIs.
-# In order to do so, uncomment the following line.
-#DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
+# Disable deprecated APIs
+#DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000
 
 SOURCES += \
+    # Main file
+    main.cpp \
+    # Examens sources
     exam.cpp \
     logindialog.cpp \
-    main.cpp \
     mainwindow.cpp \
     connexion.cpp \
-    statschartwidget.cpp
+    statschartwidget.cpp \
+    # Vehicule sources (NEW)
+    mainwindowV.cpp \
+    vehicule.cpp \
+    emailsender.cpp \
+    voicerecognition.cpp \
+    # Shared connection
+    connection.cpp
 
 HEADERS += \
+    # Examens headers
     exam.h \
     logindialog.h \
     mainwindow.h \
     connexion.h \
     role.h \
-    statschartwidget.h
+    statschartwidget.h \
+    # Vehicule headers (NEW)
+    mainwindowV.h \
+    vehicule.h \
+    emailsender.h \
+    voicerecognition.h \
+    # Shared connection
+    connection.h
 
 FORMS += \
+    # Examens forms
     logindialog.ui \
     mainwindow.ui \
-    connexion.ui
+    connexion.ui \
+    # Vehicule forms (NEW)
+    mainwindowV.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

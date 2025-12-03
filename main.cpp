@@ -1,18 +1,20 @@
 #include "mainwindow.h"
+#include "mainwindowV.h"
 #include "connexion.h"
+#include "connection.h"
+#include "logindialog.h"
+#include "role.h"
 
 #include <QApplication>
 #include <QMessageBox>
 #include <QDebug>
 #include <QtSql/QSqlDatabase>
-#include "role.h"
-#include "logindialog.h"
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    // Connexion DB
+    // 1) Establish database connection
     Connexion c;
     if (!c.ouvrirConnexion()) {
         QMessageBox::critical(
@@ -24,34 +26,33 @@ int main(int argc, char *argv[])
         return -1;
     }
 
+    qDebug() << "Connexion établie avec succès!";
 
+    // 2) Show login dialog
     LoginDialog dlg;
     if (dlg.exec() != QDialog::Accepted) {
-        return 0;
+        return 0;  // User cancelled login
     }
-    Role role = dlg.selectedRole();
 
-    MainWindow w;
-    w.setRole(role);
-    w.show();
+    Role role = dlg.selectedRole();
+    qDebug() << "User role:" << static_cast<int>(role);
+
+    // 3) Show MainWindow (Examens) as primary window
+    try {
+        MainWindow *w = new MainWindow();
+        w->setRole(role);
+        w->show();
+    } catch (...) {
+        QMessageBox::critical(nullptr, "Erreur",
+                              "Impossible de charger la fenêtre principale (Examens).\n"
+                              "Affichage de la fenêtre Véhicules à la place.");
+
+        // Fallback to vehicle window if MainWindow crashes
+        MainWindowV *vehicleWindow = new MainWindowV();
+        vehicleWindow->setWindowTitle("Gestion Véhicules - " +
+                                      QString(role == Role::Admin ? "Admin" : "Moniteur"));
+        vehicleWindow->show();
+    }
 
     return a.exec();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*    QMessageBox::information(
-        nullptr,
-        QObject::tr("Base de données"),
-        QObject::tr("Connexion établie avec succès.")
-        );*/
