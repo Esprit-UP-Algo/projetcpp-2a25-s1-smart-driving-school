@@ -36,6 +36,7 @@ private:
     QString getRandomJoke();
     QString m_lastJoke;
     QNetworkAccessManager* networkManager;
+    void sendToOpenAI(const QString &userMessage);
 
     struct Question {
         QString question;

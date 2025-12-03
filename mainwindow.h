@@ -14,6 +14,10 @@
 #include <QtCharts/QPieSeries>
 #include <QtCharts/QChart>
 
+#include <QProcess>
+#include <QMessageBox>
+#include <QCoreApplication>
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -45,6 +49,19 @@ private slots:
     void on_TRIE_activated(int index);
     void on_btnGenerateQr_clicked();
     void on_chatButton_clicked();
+    void on_btnCandidat_clicked();
+    void on_tableViewTRANS_clicked(const QModelIndex &index);
+    void on_btnLinkCin_clicked();
+    void on_btnUnlinkCin_clicked();
+    void on_btnRefreshCondidatTRANS_clicked();
+    void on_btnSearchCondidatTRANS_clicked();
+    void on_comboSortCondidatTRANS_activated(int index);
+    void on_tableViewCondidatTRANS_clicked(const QModelIndex &index);
+    void on_btnExportCondidatPDF_clicked();
+    void on_btnGenerateCondidatQR_clicked();
+    void on_comboCondidatCin_currentIndexChanged(int index);
+    void on_btnExamens_clicked();
+
 
 private:
     Ui::MainWindow *ui;
@@ -55,6 +72,13 @@ private:
     QChartView *chartView = nullptr;          // statistics chart
     QImage generateQrImage(const QString &text, int pixelsPerModule = 8);
     QString buildDashboardText() const;
+    QString currentCondidatCin;   // CIN selected in the Condidat/transaction tab
+
+    QSqlQueryModel *modelStatsCondidat = nullptr;
+    QChartView     *chartViewCondidat  = nullptr;
+
+
+    void loadCondidatStatistics(const QString &cin);
 
     void loadStatistics();
     void loadTableData();
@@ -62,6 +86,10 @@ private:
     void clearForm();
     void initYearFilter();
     void updateDashboard(int year = 0);   // 0 = all years
+    int currentTransactionId = -1;
+    void loadCondidatCombo();
+    void loadCondidatTransactions();
+
 
     QChartView *chartViewBalance = nullptr;   // NEW: dashboard chart
 };

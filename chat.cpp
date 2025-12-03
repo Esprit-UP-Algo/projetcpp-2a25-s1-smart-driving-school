@@ -5,6 +5,12 @@
 #include "mainwindow.h"
 #include <QRegularExpression>
 
+static const QString OPENAI_API_KEY = "";   // NO KEY for LM Studio
+
+static const QString OPENAI_ENDPOINT =
+    "http://127.0.0.1:1234/v1/chat/completions";
+
+static const QString OPENAI_MODEL = "phi-3-mini-4k-instruct";  // optional but nice
 
 chat::chat(QWidget *parent)
     : QDialog(parent)
@@ -247,8 +253,11 @@ QString chat::generateChatbotReply(const QString& message)
     }
     else
     {
-        reply = "Désolé, je n'ai pas compris. Essaie par exemple : \"total\", \"revenus\", \"dépenses\", \"bilan\" ou \"blague\" 🙂";
+        // Fallback to the API (asynchronous)
+        sendToOpenAI(message);
+        return "";   // IMPORTANT: prevents local error message
     }
+
 
     return reply;
 }
@@ -279,4 +288,97 @@ QString chat::decodeHtmlEntities(const QString& text)
     decodedText.replace("&gt;", ">");
     decodedText.replace("&#039;", "'");
     return decodedText;
+}
+void chat::sendToOpenAI(const QString &userMessage)
+{
+    // Build request to LM Studio's OpenAI-compatible endpoint
+    QNetworkRequest request{ QUrl(OPENAI_ENDPOINT) };
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+
+    // Only send Authorization header if we actually have a key
+    if (!OPENAI_API_KEY.isEmpty()) {
+        QByteArray authHeader = "Bearer " + OPENAI_API_KEY.toUtf8();
+        request.setRawHeader("Authorization", authHeader);
+    }
+
+    // ===== OpenAI-style JSON body =====
+    //
+    // {
+    //   "model": "phi-3-mini-4k-instruct",
+    //   "messages": [
+    //     { "role": "system", "content": "..." },
+    //     { "role": "user",   "content": "..." }
+    //   ]
+    // }
+
+    QJsonArray messages;
+
+    QJsonObject systemMsg;
+    systemMsg["role"] = "system";
+    systemMsg["content"] =
+        "You are an assistant integrated into a Qt finance application. "
+        "Answer briefly, clearly, and in French unless the user speaks another language.";
+    messages.append(systemMsg);
+
+    QJsonObject userMsg;
+    userMsg["role"] = "user";
+    userMsg["content"] = userMessage;
+    messages.append(userMsg);
+
+    QJsonObject body;
+    body["model"] = OPENAI_MODEL;
+    body["messages"] = messages;
+
+    QByteArray jsonData = QJsonDocument(body).toJson();
+
+    QNetworkReply *reply = networkManager->post(request, jsonData);
+
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        int httpStatus = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        QString httpReason = reply->attribute(QNetworkRequest::HttpReasonPhraseAttribute).toString();
+        QByteArray rawData = reply->readAll();
+
+        qDebug() << "LM Studio finished. error =" << reply->error()
+                 << "status =" << httpStatus << httpReason
+                 << "raw =" << rawData;
+
+        if (reply->error() != QNetworkReply::NoError) {
+            ui->chatDisplayTextEdit->append(
+                "Chatbot : (Erreur API) " + reply->errorString()
+                + " | HTTP " + QString::number(httpStatus) + " " + httpReason
+                + " | body: " + QString::fromUtf8(rawData));
+            reply->deleteLater();
+            return;
+        }
+
+        // Parse OpenAI-style response:
+        //
+        // {
+        //   "choices": [
+        //     {
+        //       "message": { "role": "assistant", "content": "..." }
+        //     }
+        //   ]
+        // }
+
+        QString text;
+        QJsonDocument doc = QJsonDocument::fromJson(rawData);
+
+        if (doc.isObject()) {
+            QJsonObject root = doc.object();
+            QJsonArray choices = root.value("choices").toArray();
+            if (!choices.isEmpty()) {
+                QJsonObject firstChoice = choices[0].toObject();
+                QJsonObject msgObj = firstChoice.value("message").toObject();
+                text = msgObj.value("content").toString();
+            }
+        }
+
+        if (text.isEmpty())
+            text = "Désolé, je n'ai pas pu générer de réponse.";
+
+        ui->chatDisplayTextEdit->append("Chatbot : " + text);
+
+        reply->deleteLater();
+    });
 }

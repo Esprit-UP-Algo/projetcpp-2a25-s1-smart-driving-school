@@ -23,7 +23,6 @@
 #include <QMessageBox>
 #include <QPrinter>
 #include <QFileDialog>
-#include <QPainter>
 #include <QtCharts/QChartView>
 #include <QtCharts/QBarSet>
 #include <QtCharts/QBarSeries>
@@ -34,6 +33,13 @@
 #include <QPixmap>
 #include <QtCharts/QPieSeries>
 #include "qr/qrcodegen.hpp"
+#include <QImage>
+#include <QLabel>
+#include <QDialog>
+#include <QPdfWriter>
+#include <QSqlQuery>
+using qrcodegen::QrCode;
+using qrcodegen::QrSegment;
 using namespace qrcodegen;
 
 MainWindow::MainWindow(QWidget *parent)
@@ -56,6 +62,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     initYearFilter();
 
+    loadCondidatCombo();
 
     // === Create chart view for the Dashboard ===
     chartViewBalance = new QChartView(ui->groupBox_search_7);
@@ -473,7 +480,10 @@ void MainWindow::on_exportButton_2_clicked()
 
 void MainWindow::on_tabWidget_currentChanged(int index)
 {
-    Q_UNUSED(index);
+    // Tab order: 0 = Transactions, 1 = Condidat/transaction, 2 = Statistiques, 3 = Dashboard
+    if (index == 1) {           // 👈 Condidat/transaction tab
+        loadCondidatTransactions();
+    }
 }
 
 void MainWindow::on_TRIE_activated(int index)
@@ -645,3 +655,497 @@ QString MainWindow::getTransactionInfoById(int id) const
 
     return "Aucune transaction avec cet ID.";
 }
+
+void MainWindow::on_btnCandidat_clicked()
+{
+    QString exePath =
+        "C:/Users/PC/Desktop/QT/metier_clean/build/Desktop_Qt_6_7_3_MinGW_64_bit-Debug/debug/Atelier_Connexion.exe";
+
+    if (!QFile::exists(exePath)) {
+        QMessageBox::warning(this, "Erreur",
+                             "EXE introuvable :\n" + exePath);
+        return;
+    }
+
+    bool ok = QProcess::startDetached(exePath);
+    if (!ok) {
+        QMessageBox::warning(this, "Erreur",
+                             "Impossible de lancer l'application Candidat.\n"
+                             "Chemin utilisé :\n" + exePath);
+    }
+}
+
+void MainWindow::on_btnExamens_clicked()
+{
+    QString exePath =
+        "C:/Users/PC/Desktop/QT/projetcpp-2a25-s1-smart-driving-school-vehicule-examens-integration/build/Desktop_Qt_6_7_3_MinGW_64_bit-Debug/debug/projetFF.exe";
+
+    if (!QFile::exists(exePath)) {
+        QMessageBox::warning(this, "Erreur",
+                             "EXE introuvable :\n" + exePath);
+        return;
+    }
+
+    bool ok = QProcess::startDetached(exePath);
+    if (!ok) {
+        QMessageBox::warning(this, "Erreur",
+                             "Impossible de lancer l'application Examens.\n"
+                             "Chemin utilisé :\n" + exePath);
+    }
+}
+
+
+void MainWindow::loadCondidatCombo()
+{
+    ui->comboCondidatCin->clear();
+    ui->comboCondidatCin->addItem("Choisir un condidat", QVariant()); // index 0 = no selection
+
+    QSqlQuery q("SELECT CIN, NOM, PRENOM FROM CONDIDAT ORDER BY NOM, PRENOM");
+
+    while (q.next()) {
+        QString cin = q.value(0).toString();
+        QString nom = q.value(1).toString();
+        QString prenom = q.value(2).toString();
+
+        QString display = QString("%1 - %2 %3").arg(cin, nom, prenom);
+
+        // Store CIN in the item data
+        ui->comboCondidatCin->addItem(display, cin);
+    }
+}
+void MainWindow::on_tableViewTRANS_clicked(const QModelIndex &index)
+{
+    if (!index.isValid())
+        return;
+
+    QAbstractItemModel *m = ui->tableViewTRANS->model();
+    int row = index.row();
+
+    // Assuming ID_T is column 0 in your table
+    currentTransactionId = m->data(m->index(row, 0)).toInt();
+
+    qDebug() << "Selected transaction ID_T =" << currentTransactionId;
+}
+void MainWindow::on_btnLinkCin_clicked()
+{
+    if (currentTransactionId == -1) {
+        QMessageBox::warning(this, "Erreur",
+                             "Veuillez d'abord sélectionner une transaction.");
+        return;
+    }
+
+    int idx = ui->comboCondidatCin->currentIndex();
+    if (idx <= 0) { // 0 = "Choisir un condidat"
+        QMessageBox::warning(this, "Erreur",
+                             "Veuillez choisir un condidat dans la liste.");
+        return;
+    }
+
+    QString cinText = ui->comboCondidatCin->currentData().toString();
+
+    QSqlQuery q;
+    q.prepare("UPDATE TRANSACTION SET CIN = :cin WHERE ID_T = :id");
+    q.bindValue(":cin", cinText);
+    q.bindValue(":id", currentTransactionId);
+
+    if (!q.exec()) {
+        QMessageBox::critical(this, "Erreur",
+                              "Impossible de lier la transaction au condidat.");
+        qDebug() << "link error:" << q.lastError().text();
+        return;
+    }
+
+    QMessageBox::information(this, "Succès",
+                             "Transaction liée au condidat !");
+
+    // 🔁 recharge la table
+    loadTableData();
+}
+void MainWindow::on_btnUnlinkCin_clicked()
+{
+    if (currentTransactionId == -1) {
+        QMessageBox::warning(this, "Erreur",
+                             "Veuillez d'abord sélectionner une transaction.");
+        return;
+    }
+
+    QSqlQuery q;
+    q.prepare("UPDATE TRANSACTION SET CIN = NULL WHERE ID_T = :id");
+    q.bindValue(":id", currentTransactionId);
+
+    if (!q.exec()) {
+        QMessageBox::critical(this, "Erreur",
+                              "Impossible de retirer le lien condidat.");
+        qDebug() << "unlink error:" << q.lastError().text();
+        return;
+    }
+
+    QMessageBox::information(this, "Succès",
+                             "Lien condidat retiré !");
+
+    loadTableData();
+}
+void MainWindow::loadCondidatTransactions()
+{
+    QSqlQueryModel *model = new QSqlQueryModel(this);
+
+    // Only transactions linked to a condidat (CIN NOT NULL)
+    model->setQuery(
+        "SELECT ID_T, TYPE, CATEGORY, AMOUNT, METHODE, DATE_TRANSACTION, CIN "
+        "FROM TRANSACTION "
+        "WHERE CIN IS NOT NULL "
+        "ORDER BY ID_T"
+        );
+
+    model->setHeaderData(0, Qt::Horizontal, "ID");
+    model->setHeaderData(1, Qt::Horizontal, "Type");
+    model->setHeaderData(2, Qt::Horizontal, "Catégorie");
+    model->setHeaderData(3, Qt::Horizontal, "Montant");
+    model->setHeaderData(4, Qt::Horizontal, "Méthode");
+    model->setHeaderData(5, Qt::Horizontal, "Date");
+    model->setHeaderData(6, Qt::Horizontal, "CIN");
+
+    ui->tableViewCondidatTRANS->setModel(model);
+    ui->tableViewCondidatTRANS->resizeColumnsToContents();
+}
+void MainWindow::on_btnRefreshCondidatTRANS_clicked()
+{
+    loadCondidatTransactions();
+}
+void MainWindow::on_btnSearchCondidatTRANS_clicked()
+{
+    QString searchText = ui->lineEditSearchCondidatTRANS->text().trimmed();
+
+    // If empty → show all linked transactions
+    if (searchText.isEmpty()) {
+        loadCondidatTransactions();
+        return;
+    }
+
+    QString pattern = "%" + searchText + "%";
+
+    QSqlQueryModel *model = new QSqlQueryModel(this);
+    QSqlQuery query;
+
+    // Search in: ID_T, CATEGORY, AMOUNT, TYPE, METHODE (type paiement)
+    query.prepare(
+        "SELECT ID_T, TYPE, CATEGORY, AMOUNT, METHODE, DATE_TRANSACTION, CIN "
+        "FROM TRANSACTION "
+        "WHERE CIN IS NOT NULL AND ("
+        "      LOWER(TYPE) LIKE LOWER(:p) "
+        "   OR LOWER(CATEGORY) LIKE LOWER(:p) "
+        "   OR LOWER(METHODE) LIKE LOWER(:p) "
+        "   OR TO_CHAR(AMOUNT) LIKE :p "
+        "   OR TO_CHAR(ID_T) LIKE :p "
+        ") "
+        "ORDER BY ID_T"
+        );
+
+    query.bindValue(":p", pattern);
+
+    if (!query.exec()) {
+        QMessageBox::critical(this, "Erreur",
+                              "Erreur lors de la recherche.\n" +
+                                  query.lastError().text());
+        return;
+    }
+
+    model->setQuery(query);
+
+    model->setHeaderData(0, Qt::Horizontal, "ID");
+    model->setHeaderData(1, Qt::Horizontal, "Type");
+    model->setHeaderData(2, Qt::Horizontal, "Catégorie");
+    model->setHeaderData(3, Qt::Horizontal, "Montant");
+    model->setHeaderData(4, Qt::Horizontal, "Méthode");
+    model->setHeaderData(5, Qt::Horizontal, "Date");
+    model->setHeaderData(6, Qt::Horizontal, "CIN");
+
+    ui->tableViewCondidatTRANS->setModel(model);
+    ui->tableViewCondidatTRANS->resizeColumnsToContents();
+}
+void MainWindow::on_comboSortCondidatTRANS_activated(int index)
+{
+    Q_UNUSED(index);
+
+    QString selectedSort = ui->comboSortCondidatTRANS->currentText();
+    QString orderBy = "ID_T";   // default
+
+    if (selectedSort == "Date") {
+        orderBy = "DATE_TRANSACTION";
+    } else if (selectedSort == "Type") {
+        orderBy = "TYPE";
+    } else if (selectedSort == "Montant") {
+        orderBy = "AMOUNT";
+    } else if (selectedSort == "ID") {
+        orderBy = "ID_T";
+    }
+
+    QSqlQueryModel *model = new QSqlQueryModel(this);
+
+    QString queryStr =
+        "SELECT ID_T, TYPE, CATEGORY, AMOUNT, METHODE, DATE_TRANSACTION, CIN "
+        "FROM TRANSACTION "
+        "WHERE CIN IS NOT NULL "
+        "ORDER BY " + orderBy;
+
+    model->setQuery(queryStr);
+
+    model->setHeaderData(0, Qt::Horizontal, "ID");
+    model->setHeaderData(1, Qt::Horizontal, "Type");
+    model->setHeaderData(2, Qt::Horizontal, "Catégorie");
+    model->setHeaderData(3, Qt::Horizontal, "Montant");
+    model->setHeaderData(4, Qt::Horizontal, "Méthode");
+    model->setHeaderData(5, Qt::Horizontal, "Date");
+    model->setHeaderData(6, Qt::Horizontal, "CIN");
+
+    ui->tableViewCondidatTRANS->setModel(model);
+    ui->tableViewCondidatTRANS->resizeColumnsToContents();
+}
+void MainWindow::on_tableViewCondidatTRANS_clicked(const QModelIndex &index)
+{
+    if (!index.isValid())
+        return;
+
+    QAbstractItemModel *m = ui->tableViewCondidatTRANS->model();
+    int row = index.row();
+
+    // CIN is column 6 in loadCondidatTransactions() (index 6, zero-based)
+    currentCondidatCin = m->data(m->index(row, 6)).toString();
+
+    qDebug() << "Selected condidat CIN =" << currentCondidatCin;
+}
+void MainWindow::on_btnExportCondidatPDF_clicked()
+{
+    // 1) Récupérer la transaction sélectionnée dans tableViewCondidatTRANS
+    QModelIndex currentIndex = ui->tableViewCondidatTRANS->currentIndex();
+    if (!currentIndex.isValid()) {
+        QMessageBox::warning(this, "Aucune sélection",
+                             "Veuillez sélectionner une transaction d'abord.");
+        return;
+    }
+
+    QAbstractItemModel *model = ui->tableViewCondidatTRANS->model();
+    int row = currentIndex.row();
+
+    // Colonnes : ID | Type | Catégorie | Montant | Méthode | Date | CIN
+    QString type      = model->index(row, 1).data().toString();
+    QString categorie = model->index(row, 2).data().toString();
+    double amountVal = model->index(row, 3).data().toDouble();
+    QString amountStr = QString::number(amountVal, 'f', 2) + " DT";
+    QString methode   = model->index(row, 4).data().toString();
+    QString isoDate   = model->index(row, 5).data().toString();
+    QString cinStr    = model->index(row, 6).data().toString();
+
+    // Format date (YYYY-MM-DD -> DD/MM/YYYY)
+    QString formattedDate;
+    if (isoDate.length() >= 10) {
+        QString d = isoDate.left(10);
+        formattedDate = d.mid(8, 2) + "/" + d.mid(5, 2) + "/" + d.mid(0, 4);
+    } else {
+        formattedDate = isoDate;
+    }
+
+    // 2) Choix du fichier
+    QString fileName = QFileDialog::getSaveFileName(
+        this,
+        "Enregistrer PDF",
+        "transaction_condidat.pdf",
+        "PDF (*.pdf)");
+
+    if (fileName.isEmpty())
+        return;
+
+    // 3) Création du PDF
+    QPdfWriter pdf(fileName);
+    pdf.setPageSize(QPageSize(QPageSize::A4));
+    pdf.setResolution(96);
+
+    QPainter painter(&pdf);
+    painter.setRenderHint(QPainter::Antialiasing);
+
+    int x = 50;
+    int y = 100;
+
+    // === Titre ===
+    painter.setFont(QFont("Helvetica", 20, QFont::Bold));
+    painter.drawText(x, y, "Détails de la Transaction du Condidat");
+    y += 40;
+
+    painter.setFont(QFont("Helvetica", 12, QFont::Bold));
+    painter.drawText(x, y, "CIN : " + cinStr);
+    y += 30;
+
+    painter.setFont(QFont("Helvetica", 11));
+
+    // === Contenu de la transaction (sans ID) ===
+    painter.drawText(x, y,        "Type : " + type);
+    y += 25;
+    painter.drawText(x, y,        "Catégorie : " + categorie);
+    y += 25;
+    painter.drawText(x, y,        "Montant : " + amountStr);
+    y += 25;
+    painter.drawText(x, y,        "Méthode : " + methode);
+    y += 25;
+    painter.drawText(x, y,        "Date : " + formattedDate);
+
+    painter.end();
+    QMessageBox::information(this, "Succès", "PDF généré avec succès !");
+}
+
+void MainWindow::on_btnGenerateCondidatQR_clicked()
+{
+    // 1) Récupérer la transaction sélectionnée dans tableViewCondidatTRANS
+    QModelIndex currentIndex = ui->tableViewCondidatTRANS->currentIndex();
+    if (!currentIndex.isValid()) {
+        QMessageBox::warning(this, "Aucune sélection",
+                             "Veuillez sélectionner une transaction d'abord.");
+        return;
+    }
+
+    QAbstractItemModel *model = ui->tableViewCondidatTRANS->model();
+    int row = currentIndex.row();
+
+    // Colonnes : ID | Type | Catégorie | Montant | Méthode | Date | CIN
+    QString type      = model->index(row, 1).data().toString();
+    QString categorie = model->index(row, 2).data().toString();
+    double  amountVal = model->index(row, 3).data().toDouble();
+    QString amountStr = QString::number(amountVal, 'f', 2) + " DT";
+    QString methode   = model->index(row, 4).data().toString();
+    QString isoDate   = model->index(row, 5).data().toString();
+    QString cinStr    = model->index(row, 6).data().toString();
+
+    // Format date (YYYY-MM-DD -> DD/MM/YYYY) comme avant
+    QString dateStr;
+    if (isoDate.length() >= 10) {
+        QString d = isoDate.left(10);
+        dateStr = d.mid(8, 2) + "/" + d.mid(5, 2) + "/" + d.mid(0, 4);
+    } else {
+        dateStr = isoDate;
+    }
+
+    // 2) Construire un résumé UNIQUEMENT pour cette transaction (sans ID)
+    QString summary;
+    summary += "Transaction du condidat\n";
+    summary += "CIN: "        + cinStr    + "\n";
+    summary += "Type: "       + type      + "\n";
+    summary += "Catégorie: "  + categorie + "\n";
+    summary += "Montant: "    + amountStr + "\n";
+    summary += "Méthode: "    + methode   + "\n";
+    summary += "Date: "       + dateStr   + "\n";
+
+    // 3) Générer le QR code (même code qu’avant)
+    if (summary.length() > 2500) {
+        QMessageBox::warning(this, "Attention",
+                             "Le texte est très long, le QR risque d'être difficile à scanner.");
+    }
+
+    QrCode qr = QrCode::encodeText(summary.toUtf8().constData(), QrCode::Ecc::LOW);
+    int size = qr.getSize();
+
+    QImage image(size, size, QImage::Format_RGB888);
+    for (int y = 0; y < size; ++y) {
+        for (int x = 0; x < size; ++x) {
+            bool black = qr.getModule(x, y);
+            image.setPixelColor(x, y, black ? Qt::black : Qt::white);
+        }
+    }
+
+    QPixmap pix = QPixmap::fromImage(image).scaled(
+        300, 300, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+
+    QDialog *dlg = new QDialog(this);
+    dlg->setWindowTitle("QR Code - Transaction condidat");
+
+    QVBoxLayout *layout = new QVBoxLayout(dlg);
+    QLabel *label = new QLabel(dlg);
+    label->setPixmap(pix);
+    label->setAlignment(Qt::AlignCenter);
+
+    layout->addWidget(label);
+    dlg->setLayout(layout);
+    dlg->resize(320, 340);
+    dlg->exec();
+}
+
+void MainWindow::loadCondidatStatistics(const QString &cin)
+{
+    // Delete old model if any
+    if (modelStatsCondidat) {
+        delete modelStatsCondidat;
+        modelStatsCondidat = nullptr;
+    }
+
+    // Get data from Transaction
+    modelStatsCondidat = Transaction::afficherStatParCondidat(cin);
+
+    // Build bar set + labels
+    QBarSet *set = new QBarSet("Total des transactions");
+    QStringList categories;
+
+    for (int i = 0; i < modelStatsCondidat->rowCount(); ++i) {
+        QString year  = modelStatsCondidat->record(i).value("ANNEE").toString();
+        double total  = modelStatsCondidat->record(i).value("TOTAL").toDouble();
+
+        categories << year;
+        *set << total;
+    }
+
+    qDebug() << "[loadCondidatStatistics] rows:" << modelStatsCondidat->rowCount();
+
+    QBarSeries *series = new QBarSeries();
+    series->append(set);
+
+    QChart *chart = new QChart();
+    chart->addSeries(series);
+    chart->setTitle(
+        QString("Statistiques des transactions par année pour le CIN %1")
+            .arg(cin)
+        );
+    chart->setAnimationOptions(QChart::SeriesAnimations);
+
+    QBarCategoryAxis *axisX = new QBarCategoryAxis();
+    axisX->append(categories);
+    chart->addAxis(axisX, Qt::AlignBottom);
+    series->attachAxis(axisX);
+
+    QValueAxis *axisY = new QValueAxis();
+    axisY->setTitleText("Montant (DT)");
+    chart->addAxis(axisY, Qt::AlignLeft);
+    series->attachAxis(axisY);
+
+    // Remove old chart view if exists
+    if (chartViewCondidat) {
+        ui->groupBox_search_12->layout()->removeWidget(chartViewCondidat);
+        delete chartViewCondidat;
+        chartViewCondidat = nullptr;
+    }
+
+    chartViewCondidat = new QChartView(chart);
+    chartViewCondidat->setRenderHint(QPainter::Antialiasing);
+
+    // Ensure groupBox_search_12 has a layout
+    if (!ui->groupBox_search_12->layout()) {
+        auto *layout = new QVBoxLayout(ui->groupBox_search_12);
+        ui->groupBox_search_12->setLayout(layout);
+    }
+
+    ui->groupBox_search_12->layout()->addWidget(chartViewCondidat);
+    // Optional: show a message if there is no data
+    if (modelStatsCondidat->rowCount() == 0) {
+        qDebug() << "[loadCondidatStatistics] No data for CIN" << cin;
+        // QMessageBox::information(this, "Info",
+        //                          "Aucune transaction trouvée pour ce candidat.");
+    }
+}
+
+void MainWindow::on_comboCondidatCin_currentIndexChanged(int index)
+{
+        Q_UNUSED(index);
+
+        QString text = ui->comboCondidatCin->currentText().trimmed();
+        if (text.isEmpty() || text == "Choisir un condidat")
+            return;
+        QString cin = text.section('-', 0, 0).trimmed();
+
+        loadCondidatStatistics(cin);
+    }

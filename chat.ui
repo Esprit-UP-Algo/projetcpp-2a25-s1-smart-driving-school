@@ -38,9 +38,19 @@
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">QTextEdit{
-	font: 9pt  &quot;neue haas grotesk text pro extr&quot;;
-}</string>
+     <string notr="true">QTextEdit {
+    background: #ffffff;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 10px;
+    font-size: 14px;
+    color: #333;
+}
+
+QTextEdit:focus {
+    border: 2px solid #4f7cff;
+}
+</string>
     </property>
    </widget>
    <widget class="QPushButton" name="SendButton">
@@ -55,16 +65,34 @@
     <property name="font">
      <font>
       <family>neue haas grotesk text pro extr</family>
-      <pointsize>11</pointsize>
+      <pointsize>-1</pointsize>
       <italic>false</italic>
-      <bold>false</bold>
+      <bold>true</bold>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">QPushButton{
-	font: 11pt &quot;neue haas grotesk text pro extr&quot;;
-  background-color: rgb(170, 0, 127);
-}</string>
+     <string notr="true">QPushButton {
+    background: qlineargradient(
+        x1:0, y1:0, x2:1, y2:1,
+        stop:0 #ff4d4d,
+        stop:1 #9b4dff
+    );
+    border: none;
+    border-radius: 14px;
+    padding: 10px 16px;
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+QPushButton:hover {
+    opacity: 0.9;
+}
+
+QPushButton:pressed {
+    background-color: #5522aa;
+}
+</string>
     </property>
     <property name="text">
      <string>Envoyer</string>
@@ -75,8 +103,8 @@
      <rect>
       <x>50</x>
       <y>90</y>
-      <width>611</width>
-      <height>421</height>
+      <width>631</width>
+      <height>461</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -93,24 +121,28 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>110</x>
-      <y>30</y>
-      <width>311</width>
-      <height>31</height>
+      <x>240</x>
+      <y>0</y>
+      <width>241</width>
+      <height>51</height>
      </rect>
     </property>
     <property name="font">
      <font>
       <family>Neue Haas Grotesk Text Pro Extr</family>
       <pointsize>19</pointsize>
+      <bold>true</bold>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">border : none ;
-background-color: none;
-color : #333770 ;
-background-image : url();
-    
+     <string notr="true">QLabel {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 8px 12px;
+    color: #1a1a1a;
+    font-weight: bold;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
 </string>
     </property>
     <property name="text">
@@ -139,55 +171,30 @@ background-image : url();
      <string/>
     </property>
    </widget>
-   <widget class="QLabel" name="label_3">
-    <property name="geometry">
-     <rect>
-      <x>80</x>
-      <y>530</y>
-      <width>551</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Neue Haas Grotesk Text Pro Extr</family>
-      <pointsize>10</pointsize>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">border : none ;
-background-color: none;
-color : #333770 ;
-background-image : url();
-    
-
-</string>
-    </property>
-    <property name="text">
-     <string>Veuillez écrire ici et appuyer sur envoyer pour ajouter votre message.</string>
-    </property>
-   </widget>
    <widget class="QLabel" name="label_4">
     <property name="geometry">
      <rect>
-      <x>50</x>
-      <y>60</y>
-      <width>371</width>
-      <height>31</height>
+      <x>130</x>
+      <y>50</y>
+      <width>491</width>
+      <height>41</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <family>Neue Haas Grotesk Text Pro Extr</family>
+      <family>Consolas</family>
       <pointsize>10</pointsize>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">border : none ;
-background-color: none;
-color : #333770 ;
-background-image : url();
-    
+     <string notr="true">QLabel {
+    background-color: #000000;
+    color: #00ff00;
+    padding: 8px 12px;
+    border: 1px solid #00ff00;
+    border-radius: 5px;
+    font-family: Consolas, monospace;
+}
 </string>
     </property>
     <property name="text">

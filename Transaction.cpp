@@ -11,6 +11,7 @@
 #include <QVariant>
 #include <QMessageBox>
 #include <QDebug>
+#include <QSqlError>
 // Oracle table and column names
 static const char* TABLE_NAME = "TRANSACTION";
 static const char* COL_ID     = "ID_T";
@@ -44,10 +45,12 @@ bool Transaction::ajouter() const
         qDebug() << "[Transaction::ajouter] Date invalide:" << date;
         return false;
     }
-    if (d <= QDate::currentDate()) {
-               QMessageBox::warning(nullptr, "Erreur","Date doit être > date actuelle");
+    if (d > QDate::currentDate()) {
+        QMessageBox::warning(nullptr, "Erreur",
+                             "La date de la transaction ne peut pas être dans le futur.");
         return false;
     }
+
 
     // 3. Vérifier montant > 100
     if (amount <= 100) {
@@ -255,6 +258,34 @@ QSqlQueryModel* Transaction::afficherStat() {
 
     model->setHeaderData(0, Qt::Horizontal, "Année");
     model->setHeaderData(1, Qt::Horizontal, "Total (DT)");
+
+    return model;
+}
+
+QSqlQueryModel* Transaction::afficherStatParCondidat(const QString &cin)
+{
+    QSqlQueryModel *model = new QSqlQueryModel();
+    QSqlQuery query;
+
+    query.prepare(
+        "SELECT EXTRACT(YEAR FROM DATE_TRANSACTION) AS ANNEE, "
+        "       SUM(AMOUNT) AS TOTAL "
+        "FROM TRANSACTION "
+        "WHERE CIN = :cin "
+        "GROUP BY EXTRACT(YEAR FROM DATE_TRANSACTION) "
+        "ORDER BY ANNEE"
+        );
+
+    query.bindValue(":cin", cin);
+    if (!query.exec()) {
+        qDebug() << "[afficherStatParCondidat] SQL error:" << query.lastError().text();
+        // model stays empty, but at least we see why in the Application Output
+        return model;
+    }
+
+    model->setQuery(query);
+    model->setHeaderData(0, Qt::Horizontal, QObject::tr("Année"));
+    model->setHeaderData(1, Qt::Horizontal, QObject::tr("Total (DT)"));
 
     return model;
 }

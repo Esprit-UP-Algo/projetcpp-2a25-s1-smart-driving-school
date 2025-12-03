@@ -1,4 +1,4 @@
-#ifndef CONNEXION_H
+#ifndef _H
 #define CONNEXION_H
 
 #include <QtSql/QSqlDatabase>

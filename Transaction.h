@@ -50,6 +50,8 @@ public:
     static QSqlQueryModel* afficherParCin(const QString &cin_c);
     static QSqlQueryModel* tri(int tp);
 static QSqlQueryModel* afficherStat();
+static QSqlQueryModel* afficherStatParCondidat(const QString &cin);
+
 };
 
 #endif // TRANSACTION_H
