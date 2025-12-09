@@ -1788,7 +1788,7 @@ QDateEdit ::drop-down {
             </property>
             <property name="dateTime">
              <datetime>
-              <hour>18</hour>
+              <hour>17</hour>
               <minute>0</minute>
               <second>0</second>
               <year>2024</year>

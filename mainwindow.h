@@ -8,10 +8,13 @@
 #include <QTextCharFormat>
 #include <QRegularExpression>
 #include <QTableWidgetItem>
+#include <QSettings>  // ✅ ADD THIS
 #include "role.h"
 #include <QMainWindow>
 #include "statschartwidget.h"
-#include "voicerecognition.h"  // ✅ ADD THIS
+#include "voicerecognition.h"
+#include "emailsender.h"      // ✅ ADD THIS
+#include "arduinoVH.h"        // ✅ ADD THIS
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -56,11 +59,16 @@ private slots:
     void on_btnDelPlan_clicked();
     void on_btnRefreshPlan_clicked();
 
-    // ✅ ADD THESE - Voice recognition slots
+    // ✅ Voice recognition slots
     void onVoiceTextRecognized(const QString &text);
     void onVoiceError(const QString &error);
     void onRecordingStarted();
     void onRecordingStopped();
+
+    // ✅ Arduino RFID slots
+    void onArduinoCardDetected(const QString &cardCode);
+    void onArduinoCardScanned(const QString &cardCode, bool exists);
+    void onArduinoError(const QString &error);
 
 private:
     void applyRole();
@@ -77,8 +85,14 @@ private:
     void loadVehicleData();
     void clearVehicleForm();
 
-    // ✅ ADD THIS - Voice recognition
+    // ✅ Voice recognition
     VoiceRecognition *voiceRecognition = nullptr;
+
+    // ✅ Email sender
+    EmailSender *emailSender = nullptr;
+
+    // ✅ Arduino manager
+    ArduinoVH *arduinoManager = nullptr;
 
     Role role_ = Role::Admin;
     void loadStatsTable();

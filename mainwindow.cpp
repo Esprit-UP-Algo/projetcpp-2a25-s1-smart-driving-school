@@ -14,11 +14,16 @@
 #include <QRegularExpression>
 #include <QTableWidgetItem>
 #include <QDebug>
-#include <QDesktopServices>  // ✅ ADD THIS
-#include <QUrl>              // ✅ ADD THIS (if not already present)
+#include <QDesktopServices>
+#include <QUrl>
+#include <QSettings>          // ✅ ADD THIS
+#include <QCoreApplication>   // ✅ ADD THIS
+#include <QTimer>             // ✅ ADD THIS (if not already there)
 
 #include "exam.h"
 #include "vehicule.h"
+#include "arduinoVH.h"        // ✅ ADD THIS
+#include "emailsender.h"      // ✅ ADD THIS
 
 
 static bool isExactly8Digits(const QString &s) {
@@ -279,7 +284,54 @@ MainWindow::MainWindow(QWidget *parent)
         }
     }
     */
+    emailSender = new EmailSender(this);
 
+    // Load email configuration from config.ini
+    QSettings settings(QCoreApplication::applicationDirPath() + "/config.ini", QSettings::IniFormat);
+    QString smtpServer = settings.value("Email/smtp_server", "smtp.gmail.com").toString();
+    int smtpPort = settings.value("Email/smtp_port", 587).toInt();
+    QString emailUser = settings.value("Email/username", "").toString();
+    QString emailPass = settings.value("Email/password", "").toString();
+    QString fromName = settings.value("Email/from_name", "Auto-École Gestion").toString();
+
+    if (!emailUser.isEmpty() && !emailPass.isEmpty()) {
+        emailSender->setSmtpServer(smtpServer, smtpPort);
+        emailSender->setCredentials(emailUser, emailPass);
+        emailSender->setFromAddress(emailUser, fromName);
+        qDebug() << "✅ Configuration email chargée avec succès";
+    } else {
+        qDebug() << "⚠️ AVERTISSEMENT: Configuration email manquante dans config.ini";
+    }
+
+    // ============================================================
+    // INITIALIZE ARDUINO MANAGER
+    // ============================================================
+    arduinoManager = new ArduinoVH(this);
+
+    // Connect Arduino signals
+    connect(arduinoManager, &ArduinoVH::cardDetected,
+            this, &MainWindow::onArduinoCardDetected);
+    connect(arduinoManager, &ArduinoVH::cardScanned,
+            this, &MainWindow::onArduinoCardScanned);
+    connect(arduinoManager, &ArduinoVH::errorOccurred,
+            this, &MainWindow::onArduinoError);
+
+    // Auto-connect Arduino on startup
+    QTimer::singleShot(1000, this, [this]() {
+        if (arduinoManager && arduinoManager->connectToArduino()) {
+            qDebug() << "✅ Arduino connecté automatiquement";
+            QMessageBox::information(this, "Arduino RFID",
+                                     "✅ Arduino connecté!\n\n"
+                                     "Prêt à scanner les cartes RFID.");
+        } else {
+            qDebug() << "⚠️ Impossible de connecter l'Arduino";
+            QMessageBox::warning(this, "Arduino RFID",
+                                 "⚠️ Arduino non détecté!\n\n"
+                                 "Vérifiez la connexion USB.");
+        }
+    });
+
+    qDebug() << "=== MAINWINDOW INITIALIZATION COMPLETE ===";
     qDebug() << "=== APPLICATION DÉMARRÉE SANS CALENDRIER ===";
     qDebug() << "Le reste de l'application devrait fonctionner normalement";
 }
@@ -1541,4 +1593,60 @@ void MainWindow::on_pushButton_email_clicked()
         QMessageBox::information(this, "Succès",
                                  "Client email ouvert avec les informations du véhicule.");
     }
+
+
+    ui->setupUi(this);
+
+    // Initialisation de l'EmailSender
+    emailSender = new EmailSender(this);
+
+    // Configuration de l'email depuis config.ini
+    QSettings settings(QCoreApplication::applicationDirPath() + "/config.ini", QSettings::IniFormat);
+    QString smtpServer = settings.value("Email/smtp_server", "smtp.gmail.com").toString();
+    int smtpPort = settings.value("Email/smtp_port", 587).toInt();
+    QString emailUser = settings.value("Email/username", "").toString();
+    QString emailPass = settings.value("Email/password", "").toString();
+    QString fromName = settings.value("Email/from_name", "Auto-École Gestion").toString();
+
+    if (!emailUser.isEmpty() && !emailPass.isEmpty()) {
+        emailSender->setSmtpServer(smtpServer, smtpPort);
+        emailSender->setCredentials(emailUser, emailPass);
+        emailSender->setFromAddress(emailUser, fromName);
+        qDebug() << "Configuration email chargée avec succès";
+    } else {
+        qDebug() << "AVERTISSEMENT: Configuration email manquante dans config.ini";
+    }}
+void MainWindow::onArduinoCardDetected(const QString &cardCode)
+{
+    qDebug() << "❌ Carte non enregistrée détectée:" << cardCode;
+
+    QMessageBox::warning(this, "❌ Carte Non Enregistrée",
+                         "Cette carte RFID n'est pas enregistrée dans la base de données!\n\n"
+                         "📇 Code de la carte: " + cardCode + "\n\n"
+                                          "⚠️ Veuillez contacter l'administrateur pour enregistrer cette carte.");
+}
+void MainWindow::onArduinoCardScanned(const QString &cardCode, bool exists)
+{
+    if (!exists) {
+        return; // Already handled by onArduinoCardDetected
+    }
+
+    qDebug() << "✅ Carte existante scannée:" << cardCode;
+
+    QMessageBox msgBox(this);
+    msgBox.setIcon(QMessageBox::Information);
+    msgBox.setText("✅ Carte Reconnue");
+    msgBox.setInformativeText("Code: " + cardCode + "\n\nPrésence marquée pour 10 secondes");
+    msgBox.setStandardButtons(QMessageBox::Ok);
+    msgBox.setWindowTitle("RFID - Accès Autorisé");
+
+    // Auto-close after 2 seconds
+    QTimer::singleShot(2000, &msgBox, &QMessageBox::accept);
+    msgBox.exec();
+}
+
+void MainWindow::onArduinoError(const QString &error)
+{
+    qDebug() << "❌ Erreur Arduino:" << error;
+    QMessageBox::warning(this, "❌ Erreur Arduino", error);
 }

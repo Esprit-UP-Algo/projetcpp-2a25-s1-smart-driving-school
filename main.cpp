@@ -38,21 +38,11 @@ int main(int argc, char *argv[])
     qDebug() << "User role:" << static_cast<int>(role);
 
     // 3) Show MainWindow (Examens) as primary window
-    try {
+
         MainWindow *w = new MainWindow();
         w->setRole(role);
         w->show();
-    } catch (...) {
-        QMessageBox::critical(nullptr, "Erreur",
-                              "Impossible de charger la fenêtre principale (Examens).\n"
-                              "Affichage de la fenêtre Véhicules à la place.");
 
-        // Fallback to vehicle window if MainWindow crashes
-        MainWindowV *vehicleWindow = new MainWindowV();
-        vehicleWindow->setWindowTitle("Gestion Véhicules - " +
-                                      QString(role == Role::Admin ? "Admin" : "Moniteur"));
-        vehicleWindow->show();
-    }
 
     return a.exec();
 }

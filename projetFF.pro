@@ -1,8 +1,8 @@
 QT       += core gui sql widgets
 QT       += printsupport charts network multimedia
+QT       += serialport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
-
 CONFIG += c++17
 
 # Disable deprecated APIs
@@ -17,11 +17,13 @@ SOURCES += \
     mainwindow.cpp \
     connexion.cpp \
     statschartwidget.cpp \
-    # Vehicule sources (NEW)
-    mainwindowV.cpp \
+    # Vehicule sources
+    #mainwindowV.cpp \
     vehicule.cpp \
     emailsender.cpp \
     voicerecognition.cpp \
+    # Arduino RFID
+    arduinoVH.cpp \
     # Shared connection
     connection.cpp
 
@@ -33,11 +35,13 @@ HEADERS += \
     connexion.h \
     role.h \
     statschartwidget.h \
-    # Vehicule headers (NEW)
-    mainwindowV.h \
+    # Vehicule headers
+    #mainwindowV.h \
     vehicule.h \
     emailsender.h \
     voicerecognition.h \
+    # Arduino RFID
+    arduinoVH.h \
     # Shared connection
     connection.h
 
@@ -46,8 +50,8 @@ FORMS += \
     logindialog.ui \
     mainwindow.ui \
     connexion.ui \
-    # Vehicule forms (NEW)
-    mainwindowV.ui
+    # Vehicule forms
+    # mainwindowV.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
