@@ -3,9 +3,11 @@
 
 #include <QMainWindow>
 #include <QTableWidgetItem>
+#include <QTimer>
 #include "vehicule.h"
 #include "emailsender.h"
-#include "voicerecognition.h"  // NOUVEAU
+#include "voicerecognition.h"
+#include "arduinovh.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -30,26 +32,32 @@ private slots:
     void on_pushButton_9_clicked();
     void on_pushButton_10_clicked();
     void on_pushButton_email_clicked();
-    void on_pushButton_microphone_clicked();  // NOUVEAU: Bouton microphone
+    void on_pushButton_microphone_clicked();
     void on_tableWidget_clicked(const QModelIndex &index);
 
-    // NOUVEAU: Slots pour la reconnaissance vocale
+    // Voice recognition slots
     void onVoiceTextRecognized(const QString &text);
     void onVoiceError(const QString &error);
     void onRecordingStarted();
     void onRecordingStopped();
+
+    // Arduino slots - NO BUTTON, just automatic detection
+    void onArduinoCardDetected(const QString &cardCode);
+    void onArduinoCardScanned(const QString &cardCode, bool isNew);
+    void onArduinoError(const QString &error);
 
 private:
     Ui::MainWindow *ui;
     Vehicule Vtmp;
     int selectedId;
     EmailSender *emailSender;
-    VoiceRecognition *voiceRecognition;  // NOUVEAU: Gestionnaire de reconnaissance vocale
+    VoiceRecognition *voiceRecognition;
+    ArduinoVH *arduinoManager;
 
     void updateStatistics();
     void refreshTable(QSqlQueryModel* model);
 
-    // Méthodes email
+    // Email methods
     QString getAvailableVehiclesText();
     QStringList getInstructorsList();
     QString selectInstructor();

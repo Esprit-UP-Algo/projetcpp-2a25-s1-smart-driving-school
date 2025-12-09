@@ -1,6 +1,7 @@
 #include "mainwindowV.h"
 #include "ui_mainwindowV.h"
 #include "connection.h"
+#include "arduinovh.h"
 #include <QMessageBox>
 #include <QSqlQuery>
 #include <QDebug>
@@ -23,12 +24,14 @@
 #include <QCoreApplication>
 #include <QInputDialog>
 #include <QProgressDialog>
+#include<QtSerialPort>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , selectedId(-1)
     , voiceRecognition(nullptr)
+    , arduinoManager(nullptr)
 {
     ui->setupUi(this);
 
@@ -51,6 +54,32 @@ MainWindow::MainWindow(QWidget *parent)
     } else {
         qDebug() << "AVERTISSEMENT: Configuration email manquante dans config.ini";
     }
+
+    // Initialize Arduino Manager
+    arduinoManager = new ArduinoVH(this);
+
+    // Connect Arduino signals
+    connect(arduinoManager, &ArduinoVH::cardDetected,
+            this, &MainWindow::onArduinoCardDetected);
+    connect(arduinoManager, &ArduinoVH::cardScanned,
+            this, &MainWindow::onArduinoCardScanned);
+    connect(arduinoManager, &ArduinoVH::errorOccurred,
+            this, &MainWindow::onArduinoError);
+
+    // Auto-connect to Arduino on startup
+    QTimer::singleShot(1000, this, [this]() {  // <- NOTICE THE () HERE
+        if (arduinoManager->connectToArduino()) {
+            qDebug() << "✅ Arduino connecté automatiquement";
+            QMessageBox::information(this, "Arduino RFID",
+                                     "✅ Arduino connecté!\n\n"
+                                     "Prêt à scanner les cartes RFID.");
+        } else {
+            qDebug() << "❌ Impossible de connecter l'Arduino";
+            QMessageBox::warning(this, "Arduino RFID",
+                                 "❌ Arduino non détecté!\n\n"
+                                 "Vérifiez la connexion USB.");
+        }
+    });
 
     refreshTable(Vtmp.afficher());
     connect(ui->tabWidget, &QTabWidget::currentChanged, this, &MainWindow::on_tabWidget_currentChanged);
@@ -743,4 +772,43 @@ QString MainWindow::selectInstructor()
     }
 
     return QString();
+}
+void MainWindow::onArduinoCardDetected(const QString &cardCode)
+{
+    // This is called when an UNKNOWN card is scanned
+    qDebug() << "❌ Carte non enregistrée détectée:" << cardCode;
+
+    QMessageBox::warning(this, "❌ Carte Non Enregistrée",
+                         "Cette carte RFID n'est pas enregistrée dans la base de données!\n\n"
+                         "🔇 Code de la carte: " + cardCode + "\n\n"
+                                          "⚠️ Veuillez contacter l'administrateur pour enregistrer cette carte.");
+}
+
+void MainWindow::onArduinoCardScanned(const QString &cardCode, bool exists)
+{
+    if (!exists) {
+        // This should not happen now, but just in case
+        return;
+    }
+
+    // Existing card scanned successfully
+    qDebug() << "🔄 Carte existante scannée:" << cardCode;
+
+    // Show a less intrusive notification
+    QMessageBox msgBox(this);
+    msgBox.setIcon(QMessageBox::Information);
+    msgBox.setText("✅ Carte Reconnue");
+    msgBox.setInformativeText("Code: " + cardCode + "\n\nPrésence marquée pour 10 secondes");
+    msgBox.setStandardButtons(QMessageBox::Ok);
+    msgBox.setWindowTitle("RFID - Accès Autorisé");
+
+    // Auto-close after 2 seconds
+    QTimer::singleShot(2000, &msgBox, &QMessageBox::accept);
+    msgBox.exec();
+}
+
+void MainWindow::onArduinoError(const QString &error)
+{
+    qDebug() << "❌ Erreur Arduino:" << error;
+    QMessageBox::warning(this, "❌ Erreur Arduino", error);
 }
