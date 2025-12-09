@@ -2,7 +2,7 @@
 #include "ui_chat.h"
 #include <random>
 #include <algorithm>
-#include "mainwindow.h"
+#include "mainwindowF.h"
 #include <QRegularExpression>
 
 static const QString OPENAI_API_KEY = "";   // NO KEY for LM Studio

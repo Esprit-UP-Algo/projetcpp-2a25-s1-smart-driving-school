@@ -1,5 +1,5 @@
-#include "mainwindow.h"
-#include "./ui_mainwindow.h"
+#include "mainwindowF.h"
+#include "./ui_mainwindowF.h"
 #include <QMessageBox>
 #include <QDate>
 #include <QHeaderView>
@@ -183,7 +183,7 @@ void MainWindow::updateDashboard(int year)
 
 void MainWindow::initYearFilter()
 {
-    // safety: if comboYear doesn’t exist, do nothing
+    // safety: if comboYear doesn't exist, do nothing
     if (!ui->comboYear) {
         qDebug() << "comboYear is nullptr – check objectName in .ui";
         return;
@@ -508,7 +508,7 @@ void MainWindow::on_TRIE_activated(int index)
 
 QString MainWindow::buildDashboardText() const
 {
-    // 🔁 CHANGE THESE NAMES to match your QLCDNumber widgets
+    // 📝 CHANGE THESE NAMES to match your QLCDNumber widgets
     double revenus  = ui->lcdIncome->value();      // e.g. ui->lcdTotalRevenus
     double depenses = ui->lcdExpense->value();     // e.g. ui->lcdTotalDepenses
     double balance  = ui->lcdBalance->value();      // e.g. ui->lcdBalance
@@ -758,7 +758,7 @@ void MainWindow::on_btnLinkCin_clicked()
     QMessageBox::information(this, "Succès",
                              "Transaction liée au condidat !");
 
-    // 🔁 recharge la table
+    // 🔄 recharge la table
     loadTableData();
 }
 void MainWindow::on_btnUnlinkCin_clicked()

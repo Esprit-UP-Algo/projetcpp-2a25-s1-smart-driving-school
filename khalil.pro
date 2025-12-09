@@ -10,8 +10,8 @@ CONFIG += c++17
 SOURCES += \
     Transaction.cpp \
     chat.cpp \
-    main.cpp \
-    mainwindow.cpp \
+    mainF.cpp \
+    mainwindowF.cpp \
     connexion.cpp \
     qr/qrcodegen.cpp
     qr/qrcodegen.cpp
@@ -20,7 +20,7 @@ SOURCES += \
 HEADERS += \
     Transaction.h \
     chat.h \
-    mainwindow.h \
+    mainwindowF.h \
     connexion.h \
     qr/qrcodegen.hpp
     qr/qrcodegen.hpp
@@ -28,9 +28,9 @@ HEADERS += \
 
 FORMS += \
     chat.ui \
-    mainwindow.ui \
+    mainwindowF.ui \
     connexion.ui \
-    mainwindow.ui \
+    mainwindowF.ui \
     connexion.ui
     chat.ui
 

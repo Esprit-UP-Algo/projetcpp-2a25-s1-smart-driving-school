@@ -1,5 +1,5 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#ifndef MAINWINDOWF_H
+#define MAINWINDOWF_H
 
 #include <QMainWindow>
 
@@ -94,4 +94,4 @@ private:
     QChartView *chartViewBalance = nullptr;   // NEW: dashboard chart
 };
 
-#endif // MAINWINDOW_H
+#endif // MAINWINDOWF_H
